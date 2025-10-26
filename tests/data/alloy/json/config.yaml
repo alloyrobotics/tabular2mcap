@@ -1,0 +1,15 @@
+# Mapping configuration for tabular data to MCAP conversion
+# This file defines how different CSV files should be processed and converted
+
+writer_format: "json"  # Output format: ros1, ros2, json, or protobuf. Other formats are not supported yet.
+
+# Tabular data mappings
+tabular_mappings: []
+
+attachments:
+  - file_pattern: '**/alloy_website.txt'
+    exclude_file_pattern: null
+
+metadata:
+  - file_pattern: '**/alloy_metadata.txt'
+    separator: ':'

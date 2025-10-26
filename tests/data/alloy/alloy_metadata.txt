@@ -1,0 +1,35 @@
+platform_name: Alloy AI
+platform_type: Robot Data Platform
+company_location: Sydney, Australia
+tagline: Search all your robot data in plain english
+primary_function: Unify image, time-series, and log search
+data_processing_speed: Seconds
+file_format_support: MCAP/ROS
+feature_1: Instant Mission Reports
+feature_2: Natural Language Search
+feature_3: Pattern Detection
+report_generation_time: Minutes
+search_capability: Natural Language
+search_example_query: voltage spikes in rough seas
+clustering_type: Auto-cluster similar failures
+use_case_1: Drones & Aerial Systems
+use_case_2: Maritime Robotics
+use_case_3: Agricultural Robotics
+use_case_4: Warehousing & Logistics
+data_type_1: Images & Video
+data_type_2: Time-Series Sensor Data
+data_type_3: System & Error Logs
+data_type_4: Location & Context Data
+sensor_metrics: Temperature, altitude, velocity, force, vibration
+log_types: Telemetry, network events, error codes, operational logs
+context_data: GPS, timestamps, model versions, environment metadata
+deployment_scale: 1000s of missions
+fleet_monitoring: Enabled
+failure_detection: Automatic
+pattern_recognition: Automatic
+labeling_required: No
+website: https://www.usealloy.ai
+integration_format: MCAP
+analysis_type: Multi-modal
+search_interface: Plain English
+data_unification: Enabled

@@ -1,0 +1,10 @@
+functions:
+  row_to_message_with_timestamp:
+    schema_name: null
+    template: |
+      {
+        "timestamp": {
+          "sec": {{ (timestamp) | int }},
+          "nsec": {{ ((timestamp % 1) * 1_000_000_000) | int }}
+        }
+      }

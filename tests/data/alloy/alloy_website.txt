@@ -1,0 +1,36 @@
+Alloy AI - Robot Data Platform
+
+Based in Sydney, Australia
+
+Search all your robot data in plain english
+
+Alloy provides a platform to unify image, time-series, and log search.
+Find insights across your models, telemetry, and missions in seconds.
+
+Product Features:
+
+1. Instant Mission Reports
+   - Upload MCAP/ROS files
+   - Get shareable summaries with key events & flagged issues in minutes
+
+2. Natural Language Search
+   - Query like "voltage spikes in rough seas" across 1000s of missions
+   - No labelling needed
+
+3. Pattern Detection
+   - Auto-cluster similar failures across your fleet
+   - See trends you'd never spot manually
+
+Use Cases:
+- Drones & Aerial Systems: Search flight footage, link with telemetry, detect failures
+- Maritime Robotics: Diagnose errors by combining sensor data, video, and log streams
+- Agricultural Robotics: Correlate camera frames with LIDAR and CAN bus logs
+- Warehousing & Logistics: Monitor AMRs, detect recurring issues
+
+Data Types Supported:
+- Images & Video: Frame-by-frame analysis from cameras, drones, and robotics systems
+- Time-Series Sensor Data: Temperature, altitude, velocity, force, vibration
+- System & Error Logs: Telemetry, network events, error codes, operational logs
+- Location & Context Data: GPS, timestamps, model versions, environment metadata
+
+Website: https://www.usealloy.ai
