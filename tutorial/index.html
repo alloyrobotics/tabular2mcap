@@ -17,7 +17,7 @@
         <link rel="next" href="../api/main/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../assets/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
     
     
@@ -27,6 +27,9 @@
     
     
       <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -47,6 +50,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -57,7 +62,14 @@
   </head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="#2d62ff">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -66,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tutorial-adding-support-for-new-csv-data-types" class="md-skip">
+        <a href="#tutorial-setting-up-the-config-to-convert-csv-to-mcap" class="md-skip">
           Skip to content
         </a>
       
@@ -84,8 +96,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="tabular2mcap" class="md-header__button md-logo" aria-label="tabular2mcap" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -108,6 +119,32 @@
         </div>
       </div>
     </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="#2d62ff"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="#2d62ff"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
     
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
@@ -194,8 +231,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="tabular2mcap" class="md-nav__button md-logo" aria-label="tabular2mcap" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     tabular2mcap
@@ -303,45 +339,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-2-create-converter-functions" class="md-nav__link">
+  <a href="#step-2-create-configuration-file" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2: Create Converter Functions
+      Step 2: Create Configuration File
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-create-configuration-file" class="md-nav__link">
+  <a href="#step-3-create-converter-functions" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 3: Create Configuration File
+      Step 3: Create Converter Functions
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-optional-advanced-jinja2-templates" class="md-nav__link">
+  <a href="#step-4-run-the-conversion" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 4: (Optional) Advanced Jinja2 Templates
+      Step 4: Run the Conversion
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-run-the-conversion" class="md-nav__link">
+  <a href="#step-5-validate-output" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 5: Run the Conversion
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-6-validate-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 6: Validate Output
+      Step 5: Validate Output
     </span>
   </a>
   
@@ -559,45 +586,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-2-create-converter-functions" class="md-nav__link">
+  <a href="#step-2-create-configuration-file" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2: Create Converter Functions
+      Step 2: Create Configuration File
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-create-configuration-file" class="md-nav__link">
+  <a href="#step-3-create-converter-functions" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 3: Create Configuration File
+      Step 3: Create Converter Functions
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-optional-advanced-jinja2-templates" class="md-nav__link">
+  <a href="#step-4-run-the-conversion" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 4: (Optional) Advanced Jinja2 Templates
+      Step 4: Run the Conversion
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-run-the-conversion" class="md-nav__link">
+  <a href="#step-5-validate-output" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 5: Run the Conversion
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-6-validate-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 6: Validate Output
+      Step 5: Validate Output
     </span>
   </a>
   
@@ -631,112 +649,94 @@
   
 
 
-<h1 id="tutorial-adding-support-for-new-csv-data-types">Tutorial: Adding Support for New CSV Data Types</h1>
-<p>This tutorial walks you through the process of creating the config and converter files to support new types of CSV data.</p>
-<p>The <code>converter_functions.yaml</code> is first created to reflect the column headings of the target CSV file, then the <code>config.yaml</code> file is created to the data in the target CSV to the convert functions in <code>converter_functions.yaml</code>.</p>
+<h1 id="tutorial-setting-up-the-config-to-convert-csv-to-mcap">Tutorial: Setting up the config to convert CSV to MCAP</h1>
+<p>Learn how to create configuration files that convert your CSV data to MCAP format.</p>
 <h2 id="step-1-analyze-your-csv-data">Step 1: Analyze Your CSV Data</h2>
-<p>The first step is to examine your CSV file structure to understand the data format:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Look at the first few rows and data types</span>
-python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import pandas as pd; df = pd.read_csv(&#39;your_data.csv&#39;); print(df.dtypes); print(df.head())&quot;</span>
+<p>Suppose you have data from a wheeled robot with GPS, sensor readings, and camera:</p>
+<div class="highlight"><pre><span></span><code>data/
+├── location.csv        # contains headers timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error
+├── sensor.csv          # contains headers timestamp_sec, pressure1, pressure2, sensor3, sensor4
+├── video.mp4
+├── attachment1.txt
+└── attachment2.txt
 </code></pre></div>
-<h2 id="step-2-create-converter-functions">Step 2: Create Converter Functions</h2>
-<p>Create a <code>converter_functions.yaml</code> file with Jinja2 templates.</p>
-<p>The strings <code>sensor_columnX</code> should be drawn from the column names found from Step 1, and <code>sensorX</code> is the label that the data will have in the final MCAP file.
-It may be necessary to cast your data to an <code>int</code> or <code>float</code> which can be done with <code>| int</code> and <code>| float</code> respectively.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># converter_functions.yaml</span>
-<span class="nt">functions</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">sensor_data_to_foxglove</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">sensor</span><span class="nv"> </span><span class="s">readings</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">Foxglove</span><span class="nv"> </span><span class="s">format&quot;</span>
-<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">{</span>
-<span class="w">        </span><span class="no">&quot;timestamp&quot;: {{ timestamp | int }},</span>
-<span class="w">        </span><span class="no">&quot;frame_id&quot;: &quot;{{ frame_id | default(&#39;sensor&#39;) }}&quot;,</span>
-<span class="w">        </span><span class="no">&quot;sensor1&quot;: {{ sensor_column1 }}</span>
-<span class="w">        </span><span class="no">&quot;sensor2&quot;: {{ sensor_column2 }}</span>
-<span class="w">      </span><span class="no">}</span>
-
-<span class="w">  </span><span class="nt">gps_to_location_fix</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">GPS</span><span class="nv"> </span><span class="s">coordinates</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">Foxglove</span><span class="nv"> </span><span class="s">LocationFix&quot;</span>
-<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">{</span>
-<span class="w">        </span><span class="no">&quot;timestamp&quot;: {{ timestamp | int }},</span>
-<span class="w">        </span><span class="no">&quot;frame_id&quot;: &quot;{{ frame_id | default(&#39;gps&#39;) }}&quot;,</span>
-<span class="w">        </span><span class="no">&quot;latitude&quot;: {{ latitude | float }},</span>
-<span class="w">        </span><span class="no">&quot;longitude&quot;: {{ longitude | float }},</span>
-<span class="w">        </span><span class="no">&quot;altitude&quot;: {{ altitude | float | default(0) }},</span>
-<span class="w">        </span><span class="no">&quot;position_covariance&quot;: [0,0,0,0,0,0,0,0,0],</span>
-<span class="w">        </span><span class="no">&quot;position_covariance_type&quot;: 0</span>
-<span class="w">      </span><span class="no">}</span>
-</code></pre></div>
-<h2 id="step-3-create-configuration-file">Step 3: Create Configuration File</h2>
-<p>Now the converter functions have been established in Step 2, the data in the target CSV must be mapped to those functions.
-This is done by creating a <code>config.yaml</code> file as shown below:</p>
+<h2 id="step-2-create-configuration-file">Step 2: Create Configuration File</h2>
+<p>Map your CSV files to MCAP topics and message types using <code>config.yaml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># config.yaml</span>
 <span class="nt">writer_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
 
 <span class="nt">tabular_mappings</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor_*.csv&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;location.csv&quot;</span>
 <span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor_data_to_foxglove&quot;</span>
-<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foxglove.RawMessage&quot;</span>
-<span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SensorData&quot;</span>
-<span class="w">        </span><span class="nt">exclude_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;unused_column&quot;</span><span class="p p-Indicator">]</span>
-
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;gps_*.csv&quot;</span>
-<span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;gps_to_location_fix&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_location_fix&quot;</span>
 <span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foxglove.LocationFix&quot;</span>
 <span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;LocationFix&quot;</span>
 
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor.csv&quot;</span>
+<span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_timestamp&quot;</span>
+<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Data&quot;</span>
+<span class="w">        </span><span class="nt">exclude_columns</span><span class="p">:</span>
+<span class="w">        </span><span class="c1"># Exclude timestamp_sec; all other columns (pressure1, pressure2, sensor3, sensor4) are included</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;timestamp_sec&quot;</span>
+
 <span class="c1"># Optional: Add attachments and metadata</span>
 <span class="nt">attachments</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;*.jpg&quot;</span>
-<span class="w">    </span><span class="nt">mime_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;image/jpeg&quot;</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;*.mp4&quot;</span>
-<span class="w">    </span><span class="nt">mime_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;video/mp4&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;attachment*.txt&quot;</span>
+<span class="w">    </span><span class="nt">exclude_file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;(attachment2).txt&#39;</span><span class="w">  </span><span class="c1"># Excludes attachment2.txt, attaches only attachment1.txt</span>
 
 <span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;config.txt&quot;</span>
-<span class="w">    </span><span class="nt">separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;=&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;attachment2.txt&quot;</span>
+<span class="w">    </span><span class="nt">separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span>
 </code></pre></div>
-<h2 id="step-4-optional-advanced-jinja2-templates">Step 4: (Optional) Advanced Jinja2 Templates</h2>
-<p>Use Jinja2's templating features for complex data transformations:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">functions</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">advanced_sensor_conversion</span><span class="p">:</span>
+<h2 id="step-3-create-converter-functions">Step 3: Create Converter Functions</h2>
+<p>Define Jinja2 templates in <code>converter_functions.yaml</code> to transform CSV rows into messages. Use <code>| int</code> and <code>| float</code> filters for type conversion.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># converter_functions.yaml</span>
+<span class="nt">functions</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">row_to_location_fix</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">GPS</span><span class="nv"> </span><span class="s">coordinates</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">Foxglove</span><span class="nv"> </span><span class="s">LocationFix&quot;</span>
 <span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">      </span><span class="no">{</span>
-<span class="w">        </span><span class="no">&quot;timestamp&quot;: {{ timestamp | int }},</span>
-<span class="w">        </span><span class="no">&quot;frame_id&quot;: &quot;{{ frame_id | default(&#39;sensor&#39;) }}&quot;,</span>
-<span class="w">        </span><span class="no">{% if row.temperature is defined %}</span>
-<span class="w">        </span><span class="no">&quot;temperature&quot;: {{ row.temperature | float }},</span>
-<span class="w">        </span><span class="no">{% endif %}</span>
-<span class="w">        </span><span class="no">&quot;status&quot;: &quot;{{ &#39;healthy&#39; if row.error_code == 0 else &#39;error&#39; }}&quot;,</span>
-<span class="w">        </span><span class="no">{% if row.raw_data is defined %}</span>
-<span class="w">        </span><span class="no">&quot;raw_data&quot;: {{ row.raw_data | from_json | default([]) }},</span>
-<span class="w">        </span><span class="no">{% endif %}</span>
-<span class="w">        </span><span class="no">&quot;metadata&quot;: {</span>
-<span class="w">          </span><span class="no">{% for key, value in row.items() %}</span>
-<span class="w">          </span><span class="no">{% if key.startswith(&#39;meta_&#39;) %}</span>
-<span class="w">          </span><span class="no">&quot;{{ key[5:] }}&quot;: {{ value | tojson }}{% if not loop.last %},{% endif %}</span>
-<span class="w">          </span><span class="no">{% endif %}</span>
-<span class="w">          </span><span class="no">{% endfor %}</span>
-<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">&quot;timestamp&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;sec&quot;: {{ timestamp_sec | int }},</span>
+<span class="w">          </span><span class="no">&quot;nsec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
+<span class="w">        </span><span class="no">},</span>
+<span class="w">        </span><span class="no">&quot;frame_id&quot;: &quot;gps&quot;,</span>
+<span class="w">        </span><span class="no">&quot;latitude&quot;: {{ latitude | float }},</span>
+<span class="w">        </span><span class="no">&quot;longitude&quot;: {{ longitude | float }},</span>
+<span class="w">        </span><span class="no">&quot;altitude&quot;: {{ altitude | float }},</span>
+<span class="w">        </span><span class="no">&quot;position_covariance&quot;: [</span>
+<span class="w">          </span><span class="no">{{ (latitude_error or 0) ** 2 }},</span>
+<span class="w">          </span><span class="no">0, 0,</span>
+<span class="w">          </span><span class="no">0,</span>
+<span class="w">          </span><span class="no">{{ (longitude_error or 0) ** 2 }},</span>
+<span class="w">          </span><span class="no">0,</span>
+<span class="w">          </span><span class="no">0, 0,</span>
+<span class="w">          </span><span class="no">{{ (altitude_error or 0) ** 2 }}</span>
+<span class="w">        </span><span class="no">],</span>
+<span class="w">        </span><span class="no">&quot;position_covariance_type&quot;: 2</span>
+<span class="w">      </span><span class="no">}</span>
+
+<span class="w">  </span><span class="nt">row_to_timestamp</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">timestamp&quot;</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">{</span>
+<span class="w">        </span><span class="no">&quot;timestamp&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;sec&quot;: {{ timestamp_sec | int }},</span>
+<span class="w">          </span><span class="no">&quot;nsec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
+<span class="w">        </span><span class="no">},</span>
 <span class="w">      </span><span class="no">}</span>
 </code></pre></div>
-<h2 id="step-5-run-the-conversion">Step 5: Run the Conversion</h2>
-<p>The conversion can now be executed using your custom configuration yaml files:</p>
+<h2 id="step-4-run-the-conversion">Step 4: Run the Conversion</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># Basic conversion</span>
-tabular2mcap<span class="w"> </span>-i<span class="w"> </span>/path/to/your/data<span class="w"> </span>-o<span class="w"> </span>output.mcap<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-f<span class="w"> </span>converter_functions.yaml
+tabular2mcap<span class="w"> </span>-i<span class="w"> </span>/path/to/data/directory<span class="w"> </span>-o<span class="w"> </span>output.mcap<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-f<span class="w"> </span>converter_functions.yaml
 
 <span class="c1"># With topic prefix and test mode</span>
-tabular2mcap<span class="w"> </span>-i<span class="w"> </span>/path/to/your/data<span class="w"> </span>-o<span class="w"> </span>output.mcap<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-f<span class="w"> </span>converter_functions.yaml<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;my_robot/&quot;</span><span class="w"> </span>--test-mode
+tabular2mcap<span class="w"> </span>-i<span class="w"> </span>/path/to/data/directory<span class="w"> </span>-o<span class="w"> </span>output.mcap<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-f<span class="w"> </span>converter_functions.yaml<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;my_robot/&quot;</span><span class="w"> </span>--test-mode
 </code></pre></div>
-<h2 id="step-6-validate-output">Step 6: Validate Output</h2>
-<p>Foxglove is a capable tool to validate the conversion output is correct.</p>
-<p>First, <a href="https://foxglove.dev/download">download and install Foxglove Studio</a>.
-Then, using the below command, open the generated MCAP file in Foxglove Studio to validate your data conversion:</p>
-<div class="highlight"><pre><span></span><code>foxglove-studio<span class="w"> </span>output.mcap
-</code></pre></div>
+<h2 id="step-5-validate-output">Step 5: Validate Output</h2>
+<p>Open your generated MCAP file in <a href="https://foxglove.dev/download">Foxglove Studio</a> to verify the conversion.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ol>
 <li><strong>Column name issues</strong>: The tool automatically sanitizes column names by replacing spaces with <code>_</code> and removing special characters</li>
