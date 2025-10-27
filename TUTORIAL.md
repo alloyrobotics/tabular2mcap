@@ -84,7 +84,7 @@ metadata:
     separator: "="
 ```
 
-## Step 4: (Optimal) Advanced Jinja2 Templates
+## Step 4: (Optional) Advanced Jinja2 Templates
 
 Use Jinja2's templating features for complex data transformations:
 
@@ -117,10 +117,10 @@ The conversion can now be executed using your custom configuration yaml files:
 
 ```bash
 # Basic conversion
-uv run tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml
+tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml
 
 # With topic prefix and test mode
-uv run tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml -t "my_robot/" --test-mode
+tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml -t "my_robot/" --test-mode
 ```
 
 ## Step 6: Validate Output
@@ -138,4 +138,4 @@ foxglove-studio output.mcap
 
 1. **Column name issues**: The tool automatically sanitizes column names by replacing spaces with `_` and removing special characters
 2. **Data type conversion**: Use Jinja2 filters like `| float`, `| int`, `| tojson` for proper type conversion
-3. **Missing data**: Use `| default()` filter to handle missing values
+3. **Missing data**: Use `<column_name> or 0` filter to handle missing values
