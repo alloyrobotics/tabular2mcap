@@ -23,6 +23,17 @@ def convert_tabular_to_mcap(
 
     This is a convenience wrapper around the McapConverter class.
     For more control, use McapConverter directly.
+
+    Args:
+        input_path: Path to the input directory containing tabular data files
+        output_path: Path to the output MCAP file
+        config_path: Path to the config file
+        topic_prefix: Optional prefix to prepend to all topic names in the generated MCAP file
+        converter_functions_path: Path to the converter functions YAML file
+        test_mode: Test mode: only process the first 5 rows of each CSV file
+
+    Returns:
+        None
     """
     converter = McapConverter(
         config_path=config_path, converter_functions_path=converter_functions_path

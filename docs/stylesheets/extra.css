@@ -1,0 +1,7 @@
+/* Add white background to logo */
+.md-header__button.md-logo img,
+.md-logo img {
+    background-color: white;
+    padding: 0px;
+    border-radius: 4px;
+}

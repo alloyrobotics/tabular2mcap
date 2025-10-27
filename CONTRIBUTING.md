@@ -1,121 +1,73 @@
-# Contributing to tabular2mcap
+# Contributing
 
-Thank you for your interest in contributing! This guide will help you set up your development environment and understand our workflow.
+Thank you for contributing! Here's how to get started.
 
-## Development Setup
-
-### 1. Install Dependencies
-
-We use `uv` for dependency management:
+## Setup
 
 ```bash
-# Install all dependencies including dev tools
-uv sync --dev
-```
+# Install dependencies
+uv sync --group dev
 
-### 2. Install Pre-commit Hooks
-
-Pre-commit hooks automatically check your code before each commit:
-
-```bash
+# Install pre-commit hooks
 uv run pre-commit install
 ```
 
-## Development Workflow
+## Development
 
-### Running Tests
-
+### Tests
 ```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage
-uv run pytest --cov=tabular2mcap --cov-report=term
-
-# Run specific test
-uv run pytest tests/test_mcap_conversion.py::test_mcap_conversion
+uv run pytest                    # Run all tests
+uv run pytest --cov=tabular2mcap # With coverage
 ```
 
-### Code Quality Tools
-
-#### Linting and Formatting
-
-We use [Ruff](https://docs.astral.sh/ruff/) for both linting and formatting:
-
+### Linting & Formatting
 ```bash
-# Check for linting issues
-uv run ruff check .
-
-# Auto-fix issues
-uv run ruff check . --fix
-
-# Format code
-uv run ruff format .
-
-# Run both
-uv run ruff check . --fix && uv run ruff format .
+uv run ruff check . --fix        # Lint and auto-fix
+uv run ruff format .             # Format code
 ```
 
-#### Type Checking
-
-We use `mypy` for static type checking:
-
+### Type Checking (optional)
 ```bash
-uv run mypy tabular2mcap/ --ignore-missing-imports --no-strict-optional
+uv run mypy tabular2mcap/ --ignore-missing-imports
 ```
 
-Note: Type checking is informational and won't block commits while we improve coverage.
-
-### Pre-commit Hooks
-
-Pre-commit hooks run automatically before each commit. They will:
-- ✅ Auto-fix code formatting with Ruff
-- ✅ Check for common issues (trailing whitespace, file endings, etc.)
-- ✅ Run type checking (informational only)
-
-To manually run all hooks:
-
+### Documentation
 ```bash
-# Run on all files
-uv run pre-commit run --all-files
-
-# Run on staged files only
-uv run pre-commit run
+uv sync --group docs             # Install docs dependencies
+uv run mkdocs serve              # Preview at localhost:8000
 ```
 
-To skip hooks (not recommended):
+### Foxglove JSON Schema Updates
 
+JSON schemas are included in the repo to avoid download caching. To update to the latest version:
 ```bash
-git commit --no-verify
+cd tabular2mcap/external
+uv run python update_foxglove_schema.py
 ```
 
 ## Pull Request Process
 
-1. **Fork and Clone**: Fork the repository and clone your fork
-2. **Create a Branch**: Create a feature branch from `main`
-3. **Make Changes**: Write code following our style guidelines
-4. **Test**: Ensure all tests pass and add tests for new features
-5. **Lint**: Run `ruff check . --fix` and `ruff format .`
-6. **Commit**: Commit with clear, descriptive messages
-7. **Push**: Push to your fork
-8. **PR**: Open a pull request with a clear description
+1. Fork the repository and create a feature branch
+2. Make changes following the code style below
+3. Add tests for new features
+4. Run `ruff check . --fix && ruff format .`
+5. Push and open a PR with a clear description
 
-## Code Style
+### Code Style
 
-- **Line length**: 88 characters (Black-compatible)
-- **Quotes**: Double quotes for strings
-- **Imports**: Sorted automatically by Ruff (isort compatible)
-- **Type hints**: Encouraged but not required
+- **Line length**: 88 characters
+- **Quotes**: Double quotes
+- **Imports**: Auto-sorted by Ruff
+- **Type hints**: Encouraged
 
-## CI/CD
+### CI Requirements
 
-All pull requests must pass:
-- ✅ Ruff linting and formatting checks
-- ✅ All tests on Python 3.10, 3.11, 3.12
-- ✅ Tests on Ubuntu, macOS, and Windows
+PRs must pass:
 
-The CI pipeline runs automatically on all PRs and pushes to main branches.
+- ✅ Ruff linting and formatting
+- ✅ Tests on Python 3.10, 3.11, 3.12
+- ✅ Tests on Ubuntu, macOS, Windows
 
 ## Questions?
 
-Feel free to open an issue if you have questions or need help!
+Open an issue if you need help!

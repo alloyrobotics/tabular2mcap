@@ -1,6 +1,6 @@
 [project]
 name = "tabular2mcap"
-version = "0.1.1"
+version = "0.1.2"
 description = "Convert tabular CSV data to MCAP format with support for ROS2 and JSON schemas"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,6 +37,12 @@ dev = [
     "mypy>=1.11.0",
     "pre-commit>=4.0.0",
     "twine>=6.2.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-include-markdown-plugin>=6.0.0",
 ]
 
 

@@ -1,0 +1,54 @@
+site_name: tabular2mcap
+site_url: https://alloyrobotics.github.io/tabular2mcap/
+repo_url: https://github.com/alloyrobotics/tabular2mcap
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  palette:
+    # Dark mode (default, matching Alloy's aesthetic)
+    - scheme: slate
+      primary: black
+      accent: "#2d62ff"
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+    # Light mode
+    - scheme: default
+      primary: white
+      accent: "#2d62ff"
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Tutorial: tutorial.md
+  - API Reference:
+    - Main API: api/main.md
+    - Converter Modules: api/converter.md
+    - Schema Management: api/schemas.md
+    - Data Models: api/loader.md
+  - Contributing: contributing.md
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - admonition
+  - tables
