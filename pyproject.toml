@@ -1,6 +1,6 @@
 [project]
 name = "tabular2mcap"
-version = "0.1.0"
+version = "0.1.1"
 description = "Convert tabular CSV data to MCAP format with support for ROS2 and JSON schemas"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,6 +14,9 @@ dependencies = [
     "pydantic>=2.12.0",
     "scipy>=1.15.3",
     "tqdm>=4.67.1",
+    "av>=16.0.1",
+    "opencv-python>=4.12.0.88",
+    "platformdirs>=4.5.0",
 ]
 
 [tool.uv]
@@ -35,10 +38,7 @@ dev = [
     "pre-commit>=4.0.0",
     "twine>=6.2.0",
 ]
-others = [
-    "av>=16.0.1",
-    "opencv-python>=4.12.0.88",
-]
+
 
 [tool.setuptools.packages.find]
 include = ["tabular2mcap*"]
