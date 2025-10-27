@@ -4,8 +4,29 @@ repo_url: https://github.com/alloyrobotics/tabular2mcap
 
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.png
+  palette:
+    # Dark mode (default, matching Alloy's aesthetic)
+    - scheme: slate
+      primary: black
+      accent: "#2d62ff"
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+    # Light mode
+    - scheme: default
+      primary: white
+      accent: "#2d62ff"
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
   features:
     - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md

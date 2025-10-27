@@ -1,138 +1,112 @@
-# Tutorial: Adding Support for New CSV Data Types
+# Tutorial: Setting up the config to convert CSV to MCAP
 
-This tutorial walks you through the process of creating the config and converter files to support new types of CSV data.
-
-The `converter_functions.yaml` is first created to reflect the column headings of the target CSV file, then the `config.yaml` file is created to the data in the target CSV to the convert functions in `converter_functions.yaml`.
-
-
+Learn how to create configuration files that convert your CSV data to MCAP format.
 
 ## Step 1: Analyze Your CSV Data
 
-The first step is to examine your CSV file structure to understand the data format:
+Suppose you have data from a wheeled robot with GPS, sensor readings, and camera:
 
-```bash
-# Look at the first few rows and data types
-python -c "import pandas as pd; df = pd.read_csv('your_data.csv'); print(df.dtypes); print(df.head())"
+```
+data/
+├── location.csv        # contains headers timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error
+├── sensor.csv          # contains headers timestamp_sec, pressure1, pressure2, sensor3, sensor4
+├── video.mp4
+├── attachment1.txt
+└── attachment2.txt
 ```
 
-## Step 2: Create Converter Functions
 
-Create a `converter_functions.yaml` file with Jinja2 templates.
 
-The strings `sensor_columnX` should be drawn from the column names found from Step 1, and `sensorX` is the label that the data will have in the final MCAP file.
-It may be necessary to cast your data to an `int` or `float` which can be done with `| int ` and `| float` respectively.
+## Step 2: Create Configuration File
 
-```yaml
-# converter_functions.yaml
-functions:
-  sensor_data_to_foxglove:
-    description: "Convert sensor readings to Foxglove format"
-    template: |
-      {
-        "timestamp": {{ timestamp | int }},
-        "frame_id": "{{ frame_id | default('sensor') }}",
-        "sensor1": {{ sensor_column1 }}
-        "sensor2": {{ sensor_column2 }}
-      }
-
-  gps_to_location_fix:
-    description: "Convert GPS coordinates to Foxglove LocationFix"
-    template: |
-      {
-        "timestamp": {{ timestamp | int }},
-        "frame_id": "{{ frame_id | default('gps') }}",
-        "latitude": {{ latitude | float }},
-        "longitude": {{ longitude | float }},
-        "altitude": {{ altitude | float | default(0) }},
-        "position_covariance": [0,0,0,0,0,0,0,0,0],
-        "position_covariance_type": 0
-      }
-```
-
-## Step 3: Create Configuration File
-
-Now the converter functions have been established in Step 2, the data in the target CSV must be mapped to those functions.
-This is done by creating a `config.yaml` file as shown below:
+Map your CSV files to MCAP topics and message types using `config.yaml`:
 
 ```yaml
 # config.yaml
 writer_format: "json"
 
 tabular_mappings:
-  - file_pattern: "sensor_*.csv"
+  - file_pattern: "location.csv"
     converter_functions:
-      - function_name: "sensor_data_to_foxglove"
-        schema_name: "foxglove.RawMessage"
-        topic_suffix: "SensorData"
-        exclude_columns: ["unused_column"]
-
-  - file_pattern: "gps_*.csv"
-    converter_functions:
-      - function_name: "gps_to_location_fix"
+      - function_name: "row_to_location_fix"
         schema_name: "foxglove.LocationFix"
         topic_suffix: "LocationFix"
 
+  - file_pattern: "sensor.csv"
+    converter_functions:
+      - function_name: "row_to_timestamp"
+        schema_name: null
+        topic_suffix: "Data"
+        exclude_columns:
+        # Exclude timestamp_sec; all other columns (pressure1, pressure2, sensor3, sensor4) are included
+        - "timestamp_sec"
+
 # Optional: Add attachments and metadata
 attachments:
-  - file_pattern: "*.jpg"
-    mime_type: "image/jpeg"
-  - file_pattern: "*.mp4"
-    mime_type: "video/mp4"
+  - file_pattern: "attachment*.txt"
+    exclude_file_pattern: '(attachment2).txt'  # Excludes attachment2.txt, attaches only attachment1.txt
 
 metadata:
-  - file_pattern: "config.txt"
-    separator: "="
+  - file_pattern: "attachment2.txt"
+    separator: ":"
 ```
 
-## Step 4: (Optional) Advanced Jinja2 Templates
+## Step 3: Create Converter Functions
 
-Use Jinja2's templating features for complex data transformations:
+Define Jinja2 templates in `converter_functions.yaml` to transform CSV rows into messages. Use `| int` and `| float` filters for type conversion.
 
 ```yaml
+# converter_functions.yaml
 functions:
-  advanced_sensor_conversion:
+  row_to_location_fix:
+    description: "Convert GPS coordinates to Foxglove LocationFix"
     template: |
       {
-        "timestamp": {{ timestamp | int }},
-        "frame_id": "{{ frame_id | default('sensor') }}",
-        {% if row.temperature is defined %}
-        "temperature": {{ row.temperature | float }},
-        {% endif %}
-        "status": "{{ 'healthy' if row.error_code == 0 else 'error' }}",
-        {% if row.raw_data is defined %}
-        "raw_data": {{ row.raw_data | from_json | default([]) }},
-        {% endif %}
-        "metadata": {
-          {% for key, value in row.items() %}
-          {% if key.startswith('meta_') %}
-          "{{ key[5:] }}": {{ value | tojson }}{% if not loop.last %},{% endif %}
-          {% endif %}
-          {% endfor %}
-        }
+        "timestamp": {
+          "sec": {{ timestamp_sec | int }},
+          "nsec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+        },
+        "frame_id": "gps",
+        "latitude": {{ latitude | float }},
+        "longitude": {{ longitude | float }},
+        "altitude": {{ altitude | float }},
+        "position_covariance": [
+          {{ (latitude_error or 0) ** 2 }},
+          0, 0,
+          0,
+          {{ (longitude_error or 0) ** 2 }},
+          0,
+          0, 0,
+          {{ (altitude_error or 0) ** 2 }}
+        ],
+        "position_covariance_type": 2
+      }
+
+  row_to_timestamp:
+    description: "Convert timestamp"
+    template: |
+      {
+        "timestamp": {
+          "sec": {{ timestamp_sec | int }},
+          "nsec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+        },
       }
 ```
 
-## Step 5: Run the Conversion
-The conversion can now be executed using your custom configuration yaml files:
+## Step 4: Run the Conversion
 
 ```bash
 # Basic conversion
-tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml
+tabular2mcap -i /path/to/data/directory -o output.mcap -c config.yaml -f converter_functions.yaml
 
 # With topic prefix and test mode
-tabular2mcap -i /path/to/your/data -o output.mcap -c config.yaml -f converter_functions.yaml -t "my_robot/" --test-mode
+tabular2mcap -i /path/to/data/directory -o output.mcap -c config.yaml -f converter_functions.yaml -t "my_robot/" --test-mode
 ```
 
-## Step 6: Validate Output
+## Step 5: Validate Output
 
-Foxglove is a capable tool to validate the conversion output is correct.
+Open your generated MCAP file in [Foxglove Studio](https://foxglove.dev/download) to verify the conversion.
 
-First, [download and install Foxglove Studio](https://foxglove.dev/download).
-Then, using the below command, open the generated MCAP file in Foxglove Studio to validate your data conversion:
-
-```bash
-foxglove-studio output.mcap
-```
 
 ## Troubleshooting
 

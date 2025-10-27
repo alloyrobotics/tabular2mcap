@@ -22,7 +22,7 @@ pip install tabular2mcap
 
 ```bash
 tabular2mcap \
-  -i /path/to/csv/files \
+  -i /path/to/data/directory \
   -o output.mcap \
   -c config.yaml \
   -f converter_functions.yaml
