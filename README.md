@@ -1,10 +1,11 @@
 # Tabular2MCAP
 
-[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://alloyrobotics.github.io/tabular2mcap/)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-2d62ff?style=flat&labelColor=f8f9fa&color=2d62ff)](https://alloyrobotics.github.io/tabular2mcap/)
+[![Supported by Alloy](https://img.shields.io/badge/Supported%20by-Alloy-2d62ff?style=flat&labelColor=f8f9fa&color=2d62ff)](https://usealloy.ai)
 
 Convert tabular data (CSV, Parquet) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.
 
-> **Please :star: if this helps you today!**
+> **Please ⭐ if this helps you today!**
 
 ## Features
 
@@ -71,6 +72,14 @@ For detailed instructions on adding support for new types of CSV data, see the [
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and contribution guidelines.
+
+## Supported By
+
+<a href="https://usealloy.ai" target="_blank">
+  <img src="https://cdn.prod.website-files.com/68c02115d6be7142be8a1553/68e70108f9c8d1c5629ce407_logo-padding-256px.png" alt="Alloy" height="40" />
+</a>
+
+This project is supported by [Alloy](https://usealloy.ai) - Search all your robot data in plain english. Alloy provides a platform to unify image, time-series, and log search for robotics teams.
 
 ## License
 
