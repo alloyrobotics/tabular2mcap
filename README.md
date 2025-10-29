@@ -69,18 +69,18 @@ tabular_mappings:
 
 For detailed instructions on adding support for new types of CSV data, see the [Tutorial](https://alloyrobotics.github.io/tabular2mcap/tutorial/) in the documentation.
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and contribution guidelines.
-
 ## Supported By
 
 <a href="https://usealloy.ai" target="_blank">
-  <img src="https://cdn.prod.website-files.com/68c02115d6be7142be8a1553/68e70108f9c8d1c5629ce407_logo-padding-256px.png" alt="Alloy" height="40" />
+  <img src="https://cdn.prod.website-files.com/68c02115d6be7142be8a1553/68e70108f9c8d1c5629ce407_logo-padding-256px.png" alt="Alloy" style="background-color: white; padding: 0px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); height: 56px" />
 </a>
 
 This project is supported by [Alloy](https://usealloy.ai) - Search all your robot data in plain english. Alloy provides a platform to unify image, time-series, and log search for robotics teams.
 
 ## License
 
-GNU General Public License v3.0 - see [LICENSE](LICENSE) for details.
+GNU General Public License v3.0 - see [LICENSE](https://github.com/alloyrobotics/tabular2mcap/blob/main/LICENSE) for details.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and contribution guidelines.
