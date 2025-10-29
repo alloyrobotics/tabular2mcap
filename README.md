@@ -4,6 +4,8 @@
 
 Convert tabular data (CSV, Parquet) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.
 
+> **Please :star: if this helps you today!**
+
 ## Features
 
 - **Multi-Format Support**: Convert to ROS2 or JSON messages with support for standard message types (e.g., `sensor_msgs/msg/NavSatFix`, `geometry_msgs/msg/TransformStamped`, `foxglove.LocationFix`, and more)
