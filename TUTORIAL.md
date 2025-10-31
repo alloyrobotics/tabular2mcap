@@ -84,13 +84,10 @@ functions:
 
   row_to_timestamp:
     description: "Convert timestamp"
-    template: |
-      {
-        "timestamp": {
-          "sec": {{ timestamp_sec | int }},
-          "nsec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
-        },
-      }
+    template: "{}"
+    log_time_template: "{{ (timestamp_sec * 1_000_000_000) | int }}"
+    publish_time_template: "{{ (timestamp_sec * 1_000_000_000) | int }}"
+
 ```
 
 ## Step 4: Run the Conversion

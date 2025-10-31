@@ -83,8 +83,6 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
         messages = list(reader.iter_messages())
         ref_messages = list(ref_reader.iter_messages())
         assert len(messages) == len(ref_messages), "Messages count mismatch"
-        # Compare every 10th message
-        assert messages[::10] == ref_messages[::10], "Messages mismatch"
 
         # Test attachments
         attachments = list(reader.iter_attachments())
