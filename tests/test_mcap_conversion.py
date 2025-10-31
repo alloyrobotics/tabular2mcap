@@ -83,6 +83,17 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
                     f"{key} mismatch: {value} != {ref_summary[key]}"
                 )
 
+        # Test topics
+        topics = [
+            (channel.topic, channel.message_encoding)
+            for channel in summary["channels"].values()
+        ]
+        ref_topics = [
+            (channel.topic, channel.message_encoding)
+            for channel in ref_summary["channels"].values()
+        ]
+        assert topics == ref_topics, "Topics mismatch"
+
         # Test messages
         messages = list(reader.iter_messages())
         ref_messages = list(ref_reader.iter_messages())
