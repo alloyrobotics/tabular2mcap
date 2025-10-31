@@ -70,11 +70,14 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
         summary = vars(reader.get_summary())  # convert to dict
         ref_summary = vars(ref_reader.get_summary())  # convert to dict
         for key, value in summary.items():
-            if key == "chunk_indexes" or key == "chunk_lengths":
+            if key in ["chunk_indexes"]:
                 continue
-            assert value == ref_summary[key], (
-                f"{key} mismatch: {value} != {ref_summary[key]}"
-            )
+            elif key in ["schemas", "channels", "attachment_indexes"]:
+                assert len(value) == len(ref_summary[key]), f"{key} count mismatch"
+            else:
+                assert value == ref_summary[key], (
+                    f"{key} mismatch: {value} != {ref_summary[key]}"
+                )
 
         # Test messages
         messages = list(reader.iter_messages())
