@@ -85,7 +85,8 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
 
         # Test topics
         topics = {
-            (channel.topic, channel.message_encoding)
+            # Normalize path separators to Unix-style (/) for cross-platform compatibility
+            (channel.topic.replace("\\", "/"), channel.message_encoding)
             for channel in summary["channels"].values()
         }
         ref_topics = {
