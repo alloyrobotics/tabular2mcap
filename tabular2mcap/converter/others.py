@@ -2,10 +2,12 @@ from collections.abc import Iterable
 
 import numpy as np
 
+from tabular2mcap.converter.common import ConvertedRow
+
 
 def compressed_image_message_iterator(
     video_frames: list[np.ndarray], fps: float, format: str, frame_id: str
-) -> Iterable[dict]:
+) -> Iterable[ConvertedRow]:
     """Generate compressed image messages from video frames."""
     try:
         import cv2
@@ -32,20 +34,24 @@ def compressed_image_message_iterator(
         frame_timestamp = frame_idx / fps
 
         # Create compressed image message
-        yield {
-            "timestamp": {
-                "sec": int(frame_timestamp),
-                "nsec": int((frame_timestamp % 1) * 1_000_000_000),
+        yield ConvertedRow(
+            data={
+                "timestamp": {
+                    "sec": int(frame_timestamp),
+                    "nsec": int((frame_timestamp % 1) * 1_000_000_000),
+                },
+                "frame_id": frame_id,
+                "data": encoded_img.tobytes(),  # base64.b64encode(encoded_img.tobytes()).decode("utf-8"),
+                "format": format,
             },
-            "frame_id": frame_id,
-            "data": encoded_img.tobytes(),  # base64.b64encode(encoded_img.tobytes()).decode("utf-8"),
-            "format": format,
-        }
+            log_time_ns=int(frame_timestamp * 1_000_000_000),
+            publish_time_ns=int(frame_timestamp * 1_000_000_000),
+        )
 
 
 def compressed_video_message_iterator(
     video_frames: list[np.ndarray], fps: float, format: str, frame_id: str
-) -> Iterable[dict]:
+) -> Iterable[ConvertedRow]:
     """Generate compressed video messages from video frames."""
     try:
         import av
@@ -95,7 +101,27 @@ def compressed_video_message_iterator(
         # Encode frame
         packets = codec.encode(av_frame)
         for packet in packets:
-            yield {
+            yield ConvertedRow(
+                data={
+                    "timestamp": {
+                        "sec": int(frame_timestamp),
+                        "nsec": int((frame_timestamp % 1) * 1_000_000_000),
+                    },
+                    "frame_id": frame_id,
+                    "data": bytes(
+                        packet
+                    ),  # base64.b64encode(bytes(packet)).decode("utf-8"),
+                    "format": format,
+                },
+                log_time_ns=int(frame_timestamp * 1_000_000_000),
+                publish_time_ns=int(frame_timestamp * 1_000_000_000),
+            )
+            frame_timestamp += frame_timestamp_step
+
+    packets = codec.encode(None)
+    for packet in packets:
+        yield ConvertedRow(
+            data={
                 "timestamp": {
                     "sec": int(frame_timestamp),
                     "nsec": int((frame_timestamp % 1) * 1_000_000_000),
@@ -105,18 +131,8 @@ def compressed_video_message_iterator(
                     packet
                 ),  # base64.b64encode(bytes(packet)).decode("utf-8"),
                 "format": format,
-            }
-            frame_timestamp += frame_timestamp_step
-
-    packets = codec.encode(None)
-    for packet in packets:
-        yield {
-            "timestamp": {
-                "sec": int(frame_timestamp),
-                "nsec": int((frame_timestamp % 1) * 1_000_000_000),
             },
-            "frame_id": frame_id,
-            "data": bytes(packet),  # base64.b64encode(bytes(packet)).decode("utf-8"),
-            "format": format,
-        }
+            log_time_ns=int(frame_timestamp * 1_000_000_000),
+            publish_time_ns=int(frame_timestamp * 1_000_000_000),
+        )
         frame_timestamp += frame_timestamp_step

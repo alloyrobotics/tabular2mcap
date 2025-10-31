@@ -8,6 +8,7 @@ from jinja2 import Environment, StrictUndefined, Template
 from pydantic import BaseModel, Field, PrivateAttr
 from scipy.spatial.transform import Rotation as R
 
+from tabular2mcap.converter.common import ConvertedRow
 from tabular2mcap.loader.models import ConverterFunctionDefinition
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,8 @@ class ConverterFunction(BaseModel):
         default=None,
     )
     _jinja2_template: Template = PrivateAttr(default=None)
+    _log_time_template: Template | None = PrivateAttr(default=None)
+    _publish_time_template: Template | None = PrivateAttr(default=None)
 
     def init_jinja2_template(self):
         """Initialize Jinja2 template and environment after model creation."""
@@ -100,9 +103,17 @@ class ConverterFunction(BaseModel):
 
         # Create template from string
         self._jinja2_template = self.jinja2_env.from_string(self.definition.template)
+        if self.definition.log_time_template is not None:
+            self._log_time_template = self.jinja2_env.from_string(
+                self.definition.log_time_template
+            )
+        if self.definition.publish_time_template is not None:
+            self._publish_time_template = self.jinja2_env.from_string(
+                self.definition.publish_time_template
+            )
         return self
 
-    def convert_row(self, row: pd.Series) -> dict:
+    def convert_row(self, row: pd.Series) -> ConvertedRow:
         """Convert a pandas row using the Jinja2 template."""
         try:
             # Replace NaN values with None while still a Series
@@ -115,7 +126,37 @@ class ConverterFunction(BaseModel):
             result = self._jinja2_template.render(**context)
 
             # Parse JSON result
-            return json.loads(result)
+            message_data = json.loads(result)
+
+            # Calculate log_time_ns
+            if self._log_time_template is not None:
+                log_time_ns = int(self._log_time_template.render(**context))
+            elif "timestamp" in message_data:
+                log_time_ns = (
+                    message_data["timestamp"]["sec"] * 1_000_000_000
+                    + message_data["timestamp"]["nsec"]
+                )
+            elif "header" in message_data and "stamp" in message_data["header"]:
+                stamp = message_data["header"]["stamp"]
+                log_time_ns = stamp["sec"] * 1_000_000_000 + stamp.get(
+                    "nsec", stamp.get("nanosec", 0)
+                )
+            else:
+                raise ValueError(
+                    "No log_time_template provided and no timestamp found in message"
+                )
+
+            # Calculate publish_time_ns
+            if self._publish_time_template is not None:
+                publish_time_ns = int(self._publish_time_template.render(**context))
+            else:
+                publish_time_ns = log_time_ns
+
+            return ConvertedRow(
+                data=message_data,
+                log_time_ns=log_time_ns,
+                publish_time_ns=publish_time_ns,
+            )
 
         except json.JSONDecodeError as e:
             logger.error(f"JSON decode error in template result: {e}")
@@ -131,8 +172,12 @@ def generate_generic_converter_func(
     schema_keys: list[str] | dict[str, str],
     converter_func: Callable | None = None,
 ) -> Callable:
-    def convert_row(row: pd.Series) -> dict:
-        message = converter_func(row) if converter_func else {}
+    def convert_row(row: pd.Series) -> ConvertedRow:
+        result = (
+            converter_func(row)
+            if converter_func
+            else ConvertedRow(data={}, log_time_ns=0, publish_time_ns=0)
+        )
         if isinstance(schema_keys, dict):
             # ros2key, original_key
             msg_row_key_pairs = schema_keys.items()
@@ -152,9 +197,9 @@ def generate_generic_converter_func(
 
             # Handle different value types for null checking
             if isinstance(value, list) or pd.notna(value):
-                message[msg_key] = value
+                result.data[msg_key] = value
             else:
-                message[msg_key] = None
-        return message
+                result.data[msg_key] = None
+        return result
 
     return convert_row

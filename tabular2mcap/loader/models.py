@@ -129,7 +129,17 @@ class ConverterFunctionDefinition(BaseModel):
         description="The name of the schema to use for the mapping. If none, schema type is not checked.",
         default=None,
     )
-    template: str = Field(description="The Jinja2 template to use for the mapping.")
+    template: str = Field(
+        description="The Jinja2 template to use for the mapping.", default="{}"
+    )
+    log_time_template: str | None = Field(
+        description="Jinja2 template to use to map columns to log time ns. If none, the log time will be taken from timestamp or header.stamp",
+        default=None,
+    )
+    publish_time_template: str | None = Field(
+        description="Jinja2 template to use to map columns to publish time ns. If none, the publish time will be log_time",
+        default=None,
+    )
 
 
 class ConverterFunctionFile(BaseModel):
