@@ -70,9 +70,13 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
         summary = vars(reader.get_summary())  # convert to dict
         ref_summary = vars(ref_reader.get_summary())  # convert to dict
         for key, value in summary.items():
-            if key in ["chunk_indexes"]:
-                continue
-            elif key in ["schemas", "channels", "attachment_indexes"]:
+            if key in [
+                "schemas",
+                "channels",
+                "chunk_indexes",
+                "attachment_indexes",
+                "metadata_indexes",
+            ]:
                 assert len(value) == len(ref_summary[key]), f"{key} count mismatch"
             else:
                 assert value == ref_summary[key], (
