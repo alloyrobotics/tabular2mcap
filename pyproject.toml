@@ -106,5 +106,3 @@ addopts = [
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(levelname)s: %(message)s"
-log_file = "tests/test_output.log"
-log_file_level = "INFO"
