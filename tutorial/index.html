@@ -720,13 +720,9 @@
 
 <span class="w">  </span><span class="nt">row_to_timestamp</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">timestamp&quot;</span>
-<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">      </span><span class="no">{</span>
-<span class="w">        </span><span class="no">&quot;timestamp&quot;: {</span>
-<span class="w">          </span><span class="no">&quot;sec&quot;: {{ timestamp_sec | int }},</span>
-<span class="w">          </span><span class="no">&quot;nsec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
-<span class="w">        </span><span class="no">},</span>
-<span class="w">      </span><span class="no">}</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{}&quot;</span>
+<span class="w">    </span><span class="nt">log_time_template</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">(timestamp_sec</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1_000_000_000)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">int</span><span class="nv"> </span><span class="s">}}&quot;</span>
+<span class="w">    </span><span class="nt">publish_time_template</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">(timestamp_sec</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1_000_000_000)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">int</span><span class="nv"> </span><span class="s">}}&quot;</span>
 </code></pre></div>
 <h2 id="step-4-run-the-conversion">Step 4: Run the Conversion</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># Basic conversion</span>
