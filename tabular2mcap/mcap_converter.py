@@ -10,8 +10,7 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas.cache import download_and_cache_all_repos
 
-from .converter import json as mcap_json_converter
-from .converter import ros2 as mcap_ros2_converter
+from .converter import ConverterBase, JsonConverter, Ros2Converter
 from .converter.functions import (
     ConverterFunction,
     ConverterFunctionJinja2Environment,
@@ -48,6 +47,7 @@ class McapConverter:
     shared_jinja2_env: ConverterFunctionJinja2Environment
 
     _writer: McapWriter | McapRos2Writer
+    _converter: ConverterBase
     _schema_ids: dict[str, int]
 
     def __init__(
@@ -136,8 +136,10 @@ class McapConverter:
             if self.mcap_config.writer_format == "json":
                 self._writer = McapWriter(f)
                 self._writer.start()
+                self._converter = JsonConverter(self._writer)
             elif self.mcap_config.writer_format == "ros2":
                 self._writer = McapRos2Writer(f)
+                self._converter = Ros2Converter(self._writer)
 
             # Print conversion plan
             logger.info("\n" + "=" * 60)
@@ -219,32 +221,6 @@ class McapConverter:
             k: self._process_file_mappings(v, input_path) for k, v in mappings.items()
         }
 
-    def _get_functions(self, writer_format: str, function_type: str):
-        """Get format-specific functions based on the writer format and function type."""
-        if writer_format == "ros2":
-            format_functions = {
-                "register_generic_schema": mcap_ros2_converter.register_generic_schema,
-                "register_schema": mcap_ros2_converter.register_schema,
-                "write_messages_from_iterator": mcap_ros2_converter.write_messages_from_iterator,
-                "writer": self._writer._writer,
-            }
-        elif writer_format == "json":
-            format_functions = {
-                "register_generic_schema": mcap_json_converter.register_generic_schema,
-                "register_schema": mcap_json_converter.register_schema,
-                "write_messages_from_iterator": mcap_json_converter.write_messages_from_iterator,
-                "writer": self._writer,
-            }
-        else:
-            raise ValueError(f"Writer format {writer_format} is not supported")
-
-        if function_type not in format_functions:
-            raise ValueError(
-                f"Function type {function_type} is not supported for format {writer_format}"
-            )
-
-        return format_functions[function_type]
-
     def _process_tabular_mappings(
         self,
         mapping_tuples: list,
@@ -253,15 +229,6 @@ class McapConverter:
         test_mode: bool = False,
     ):
         """Process tabular data mappings."""
-        register_generic_schema = self._get_functions(
-            self.mcap_config.writer_format, "register_generic_schema"
-        )
-        register_schema = self._get_functions(
-            self.mcap_config.writer_format, "register_schema"
-        )
-        write_messages_from_iterator = self._get_functions(
-            self.mcap_config.writer_format, "write_messages_from_iterator"
-        )
 
         for file_mapping, input_file in tqdm(
             mapping_tuples,
@@ -303,16 +270,15 @@ class McapConverter:
                     # register schema
                     if converter_function.schema_name is None:
                         if self.mcap_config.writer_format == "ros2":
-                            schema_name = mcap_ros2_converter.sanitize_schema_name(
-                                topic_name
-                            )
+                            schema_name = Ros2Converter.sanitize_schema_name(topic_name)
                         else:
                             schema_name = f"table.{topic_name.replace('/', '.')}"
-                        schema_id, schema_keys = register_generic_schema(
-                            writer=self._writer,
-                            df=df,
-                            schema_name=schema_name,
-                            exclude_keys=converter_function.exclude_columns or [],
+                        schema_id, schema_keys = (
+                            self._converter.register_generic_schema(
+                                df=df,
+                                schema_name=schema_name,
+                                exclude_keys=converter_function.exclude_columns or [],
+                            )
                         )
                         convert_row = generate_generic_converter_func(
                             schema_keys=schema_keys,
@@ -323,8 +289,7 @@ class McapConverter:
                         schema_id = self._schema_ids[converter_function.schema_name]
                         convert_row = converter_def.convert_row
                     else:
-                        schema_id = register_schema(
-                            writer=self._writer,
+                        schema_id = self._converter.register_schema(
                             schema_name=converter_function.schema_name,
                         )
                         self._schema_ids[converter_function.schema_name] = schema_id
@@ -337,8 +302,7 @@ class McapConverter:
                             for idx, row in df.iterrows():  # noqa: B023
                                 yield idx, convert_row(row)  # noqa: B023
 
-                        write_messages_from_iterator(
-                            writer=self._writer,
+                        self._converter.write_messages_from_iterator(
                             iterator=convert_row_iterator(),
                             topic_name=topic_name,
                             schema_id=schema_id,
@@ -357,12 +321,6 @@ class McapConverter:
         topic_prefix: str = "",
     ):
         """Process other mappings (images, videos, etc.)."""
-        write_messages_from_iterator = self._get_functions(
-            self.mcap_config.writer_format, "write_messages_from_iterator"
-        )
-        register_schema = self._get_functions(
-            self.mcap_config.writer_format, "register_schema"
-        )
 
         for other_mapping, input_file in tqdm(
             mapping_tuples,
@@ -385,9 +343,7 @@ class McapConverter:
             if schema_name in self._schema_ids:
                 schema_id = self._schema_ids[schema_name]
             else:
-                schema_id = register_schema(
-                    writer=self._writer, schema_name=schema_name
-                )
+                schema_id = self._converter.register_schema(schema_name=schema_name)
                 self._schema_ids[schema_name] = schema_id
 
             if isinstance(
@@ -405,8 +361,7 @@ class McapConverter:
                 else:  # CompressedVideoMappingConfig
                     frame_iterator = compressed_video_message_iterator
 
-                write_messages_from_iterator(
-                    writer=self._writer,
+                self._converter.write_messages_from_iterator(
                     iterator=enumerate(
                         frame_iterator(
                             video_frames=video_frames,
@@ -425,7 +380,6 @@ class McapConverter:
 
     def _process_attachments(self, mapping_tuples: list, input_path: Path):
         """Process attachment data."""
-        writer = self._get_functions(self.mcap_config.writer_format, "writer")
 
         for _attachment, input_file in tqdm(
             mapping_tuples,
@@ -445,13 +399,13 @@ class McapConverter:
                     else int(stat.st_ctime * 1_000_000_000)
                 )
                 log_time_ns = int(stat.st_mtime * 1_000_000_000)  # modification time
-                writer.add_attachment(
+                self._converter.writer.add_attachment(
                     create_time_ns, log_time_ns, str(relative_path), "text/plain", data
                 )
 
     def _process_metadata(self, mapping_tuples: list, input_path: Path):
         """Process metadata."""
-        writer = self._get_functions(self.mcap_config.writer_format, "writer")
+
         for metadata, input_file in tqdm(
             mapping_tuples,
             desc="Processing metadata data",
@@ -469,4 +423,4 @@ class McapConverter:
                     for kv in key_value_list
                     if len(kv) >= 2
                 }
-                writer.add_metadata(str(relative_path), metadata_dict)
+                self._converter.writer.add_metadata(str(relative_path), metadata_dict)

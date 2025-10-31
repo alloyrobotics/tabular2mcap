@@ -13,6 +13,8 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas import get_foxglove_jsonschema
 
+from .common import ConverterBase
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,92 +97,160 @@ def register_foxglove_schema(writer: McapWriter, schema_name: str) -> int:
     return schema_id
 
 
-def register_generic_schema(
-    writer: McapWriter,
-    df: pd.DataFrame,
-    schema_name: str,
-    exclude_keys: list[str] | None = None,
-) -> tuple[int, list]:
-    # Use generic JSON schema with column-based conversion
-    columns = [(key, df[key].dtype) for key in df.columns]
+class JsonConverter(ConverterBase):
+    """JSON format converter that wraps JSON-specific MCAP writer operations."""
 
-    if exclude_keys is not None:
-        columns = [(key, dtype) for key, dtype in columns if key not in exclude_keys]
+    _writer: McapWriter
 
-    schema_id = register_json_schema_from_columns(writer, schema_name, columns)
-    schema_keys = [key for key, _ in columns]
+    def __init__(self, writer: McapWriter):
+        """Initialize the JSON converter with a writer instance.
 
-    return schema_id, schema_keys
+        Args:
+            writer: MCAP writer instance for JSON format
+        """
+        self._writer = writer
 
+    @property
+    def writer(self) -> McapWriter:
+        """Get the underlying writer instance."""
+        return self._writer
 
-def register_schema(
-    writer: McapWriter,
-    schema_name: str,
-) -> int:
-    """Register schema and return schema ID and conversion function.
+    def register_generic_schema(
+        self,
+        df: Any,
+        schema_name: str,
+        exclude_keys: list[str] | None = None,
+    ) -> tuple[int, list]:
+        """Register a generic JSON schema from a DataFrame.
 
-    Args:
-        writer: MCAP writer instance
-        schema_name: Name of the schema (e.g., "LocationFix" for Foxglove)
+        Args:
+            df: DataFrame to generate schema from
+            schema_name: Name for the schema
+            exclude_keys: Optional list of keys to exclude from schema
 
-    Returns:
-        Tuple of (schema_id, convert_row_function)
-    """
-    if schema_name.startswith("foxglove."):
-        schema_id = register_foxglove_schema(
-            writer, schema_name.removeprefix("foxglove.")
+        Returns:
+            Tuple of (schema_id, schema_keys)
+        """
+        # Use generic JSON schema with column-based conversion
+        columns = [(key, df[key].dtype) for key in df.columns]
+
+        if exclude_keys is not None:
+            columns = [
+                (key, dtype) for key, dtype in columns if key not in exclude_keys
+            ]
+
+        # Create JSON schema from the list of columns
+        schema: dict[str, Any] = {
+            "type": "object",
+            "properties": {
+                "timestamp": {  # always include timestamp
+                    "type": "object",
+                    "title": "time",
+                    "properties": {
+                        "sec": {"type": "integer", "minimum": 0},
+                        "nsec": {"type": "integer", "minimum": 0, "maximum": 999999999},
+                    },
+                    "description": "Timestamp of the message",
+                },
+            },
+        }
+
+        # Add properties for each key with appropriate type inference
+        properties: dict[str, Any] = schema["properties"]
+        for key, dtype in columns:
+            if pd.api.types.is_integer_dtype(dtype):
+                properties[key] = {"type": "integer"}
+            elif pd.api.types.is_float_dtype(dtype):
+                properties[key] = {"type": "number"}
+            elif pd.api.types.is_bool_dtype(dtype):
+                properties[key] = {"type": "boolean"}
+            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                properties[key] = {"type": "string"}  # Will be converted to ISO format
+            elif isinstance(dtype, pd.CategoricalDtype):
+                properties[key] = {"type": "string"}
+            else:
+                # Default to string for object/string types
+                properties[key] = {"type": "string"}
+
+        # Register the schema
+        schema_id = self._writer.register_schema(
+            name=schema_name,
+            encoding="jsonschema",
+            data=json.dumps(schema).encode(),
         )
-    else:
-        raise ValueError(
-            f"Unknown schema: {schema_name}. Must be prefixed with 'foxglove.' or none."
+
+        schema_keys = [key for key, _ in columns]
+        return schema_id, schema_keys
+
+    def register_schema(self, schema_name: str) -> int:
+        """Register a predefined schema by name.
+
+        Args:
+            schema_name: Name of the schema (e.g., "foxglove.LocationFix")
+
+        Returns:
+            Schema ID
+        """
+        if schema_name.startswith("foxglove."):
+            # Get schema data
+            schema_data = get_foxglove_jsonschema(schema_name.removeprefix("foxglove."))
+
+            # Register schema
+            schema_id = self._writer.register_schema(
+                name=f"foxglove.{schema_name.removeprefix('foxglove.')}",
+                encoding=SchemaEncoding.JSONSchema,
+                data=schema_data,
+            )
+        else:
+            raise ValueError(
+                f"Unknown schema: {schema_name}. Must be prefixed with 'foxglove.' or none."
+            )
+
+        return schema_id
+
+    def write_messages_from_iterator(
+        self,
+        iterator: Iterable[tuple[int, dict]],
+        topic_name: str,
+        schema_id: int | None,
+        data_length: int | None = None,
+        unit: str = "msg",
+    ) -> None:
+        """Write messages to MCAP from an iterator.
+
+        Args:
+            iterator: Iterator yielding (index, message) tuples
+            topic_name: Topic name for the messages
+            schema_id: Schema ID for the messages
+            data_length: Optional total length for progress tracking
+            unit: Unit label for progress tracking
+        """
+        # Register channel
+        channel_id = self._writer.register_channel(
+            topic=topic_name,
+            schema_id=schema_id if schema_id is not None else 0,
+            message_encoding=MessageEncoding.JSON,
         )
 
-    return schema_id
+        # Write messages
+        for _idx, msg in tqdm(
+            iterator,
+            desc=f"Writing to {topic_name}",
+            total=data_length,
+            leave=False,
+            unit=unit,
+        ):
+            # Calculate buf_time_ns from message timestamp
+            buf_time_ns = (
+                msg["timestamp"]["sec"] * 1_000_000_000 + msg["timestamp"]["nsec"]
+            )
 
+            if "data" in msg and isinstance(msg["data"], bytes):
+                msg["data"] = base64.b64encode(msg["data"]).decode("utf-8")
 
-def write_messages_from_iterator(
-    writer: McapWriter,
-    iterator: Iterable[tuple[int, dict]],
-    topic_name: str,
-    schema_id: int | None,
-    data_length: int | None = None,
-    unit: str = "msg",
-) -> None:
-    """Write messages from a DataFrame with flexible conversion options.
-
-    This function can handle both Foxglove-specific schemas and generic JSON schemas
-    by using different conversion strategies.
-
-    Args:
-        writer: MCAP writer instance
-        iterator: Iterable of tuples containing the index and message
-        topic_name: Full topic name for the messages
-        schema_id: Schema ID from register_foxglove_schema
-    """
-    # Register channel
-    channel_id = writer.register_channel(
-        topic=topic_name,
-        schema_id=schema_id if schema_id is not None else 0,
-        message_encoding=MessageEncoding.JSON,
-    )
-
-    # Write messages
-    for _idx, msg in tqdm(
-        iterator,
-        desc=f"Writing to {topic_name}",
-        total=data_length,
-        leave=False,
-        unit=unit,
-    ):
-        # Calculate buf_time_ns from message timestamp
-        buf_time_ns = msg["timestamp"]["sec"] * 1_000_000_000 + msg["timestamp"]["nsec"]
-
-        if "data" in msg and isinstance(msg["data"], bytes):
-            msg["data"] = base64.b64encode(msg["data"]).decode("utf-8")
-
-        writer.add_message(
-            channel_id=channel_id,
-            data=json.dumps(msg).encode("utf-8"),
-            log_time=buf_time_ns,
-            publish_time=buf_time_ns,
-        )
+            self._writer.add_message(
+                channel_id=channel_id,
+                data=json.dumps(msg).encode("utf-8"),
+                log_time=buf_time_ns,
+                publish_time=buf_time_ns,
+            )
