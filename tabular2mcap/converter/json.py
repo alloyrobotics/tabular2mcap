@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas import get_foxglove_jsonschema
 
-from .common import ConverterBase
+from .common import ConvertedRow, ConverterBase
 
 logger = logging.getLogger(__name__)
 
@@ -142,23 +142,21 @@ class JsonConverter(ConverterBase):
         # Create JSON schema from the list of columns
         schema: dict[str, Any] = {
             "type": "object",
-            "properties": {
-                "timestamp": {  # always include timestamp
-                    "type": "object",
-                    "title": "time",
-                    "properties": {
-                        "sec": {"type": "integer", "minimum": 0},
-                        "nsec": {"type": "integer", "minimum": 0, "maximum": 999999999},
-                    },
-                    "description": "Timestamp of the message",
-                },
-            },
+            "properties": {},
         }
 
         # Add properties for each key with appropriate type inference
         properties: dict[str, Any] = schema["properties"]
         for key, dtype in columns:
-            if pd.api.types.is_integer_dtype(dtype):
+            if key == "timestamp":
+                properties[key] = {
+                    "type": "object",
+                    "properties": {
+                        "sec": {"type": "integer", "minimum": 0},
+                        "nsec": {"type": "integer", "minimum": 0, "maximum": 999999999},
+                    },
+                }
+            elif pd.api.types.is_integer_dtype(dtype):
                 properties[key] = {"type": "integer"}
             elif pd.api.types.is_float_dtype(dtype):
                 properties[key] = {"type": "number"}
@@ -210,7 +208,7 @@ class JsonConverter(ConverterBase):
 
     def write_messages_from_iterator(
         self,
-        iterator: Iterable[tuple[int, dict]],
+        iterator: Iterable[tuple[int, ConvertedRow]],
         topic_name: str,
         schema_id: int | None,
         data_length: int | None = None,
@@ -233,24 +231,20 @@ class JsonConverter(ConverterBase):
         )
 
         # Write messages
-        for _idx, msg in tqdm(
+        for _idx, converted_row in tqdm(
             iterator,
             desc=f"Writing to {topic_name}",
             total=data_length,
             leave=False,
             unit=unit,
         ):
-            # Calculate buf_time_ns from message timestamp
-            buf_time_ns = (
-                msg["timestamp"]["sec"] * 1_000_000_000 + msg["timestamp"]["nsec"]
-            )
-
+            msg = converted_row.data
             if "data" in msg and isinstance(msg["data"], bytes):
                 msg["data"] = base64.b64encode(msg["data"]).decode("utf-8")
 
             self._writer.add_message(
                 channel_id=channel_id,
                 data=json.dumps(msg).encode("utf-8"),
-                log_time=buf_time_ns,
-                publish_time=buf_time_ns,
+                log_time=converted_row.log_time_ns,
+                publish_time=converted_row.publish_time_ns,
             )

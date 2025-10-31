@@ -2,7 +2,23 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, NamedTuple
+
+
+class ConvertedRow(NamedTuple):
+    """Return type for convert_row functions.
+
+    Represents a converted row with its message data and timing information.
+
+    Attributes:
+        data: The converted message data as a dictionary
+        log_time_ns: Log time in nanoseconds
+        publish_time_ns: Publish time in nanoseconds
+    """
+
+    data: dict
+    log_time_ns: int
+    publish_time_ns: int
 
 
 class ConverterBase(ABC):

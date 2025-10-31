@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas.ros2msg import get_schema_definition
 
-from .common import ConverterBase
+from .common import ConvertedRow, ConverterBase
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +92,16 @@ class Ros2Converter(ConverterBase):
         Returns:
             Tuple of (schema, schema_keys)
         """
-        type_var_name_pairs = [("builtin_interfaces/Time", "timestamp")]
+        type_var_name_pairs = []
         schema_keys = {}
 
         for key in df.columns:
             if exclude_keys and key in exclude_keys:
                 continue
+            if key == "timestamp":
+                type_var_name_pairs.append(("builtin_interfaces/Time", key))
+                continue
+
             dtype = df[key].dtype
             # Get sample data for object columns, handle case where no non-null values exist
             sample_data = None
@@ -135,7 +139,7 @@ class Ros2Converter(ConverterBase):
 
     def write_messages_from_iterator(
         self,
-        iterator: Iterable[tuple[int, dict]],
+        iterator: Iterable[tuple[int, ConvertedRow]],
         topic_name: str,
         schema_id: int | None,
         data_length: int | None = None,
@@ -151,30 +155,19 @@ class Ros2Converter(ConverterBase):
             unit: Unit label for progress tracking
         """
         # Write messages
-        for idx, msg in tqdm(
+        for idx, converted_row in tqdm(
             iterator,
             desc=f"Writing to {topic_name}",
             total=data_length,
             leave=False,
             unit=unit,
         ):
-            # Calculate buf_time_ns from message timestamp
-            if "timestamp" in msg:
-                buf_time_ns = (
-                    msg["timestamp"]["sec"] * 1_000_000_000 + msg["timestamp"]["nsec"]
-                )
-            elif "header" in msg and "stamp" in msg["header"]:
-                buf_time_ns = (
-                    msg["header"]["stamp"]["sec"] * 1_000_000_000
-                    + msg["header"]["stamp"]["nanosec"]
-                )
-            else:
-                raise ValueError("No timestamp found in message")
+            msg = converted_row.data
             self._writer.write_message(
                 topic=topic_name,
                 schema=schema_id,
                 message=msg,
-                log_time=buf_time_ns,
-                publish_time=buf_time_ns,
+                log_time=converted_row.log_time_ns,
+                publish_time=converted_row.publish_time_ns,
                 sequence=idx,
             )
