@@ -84,14 +84,14 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
                 )
 
         # Test topics
-        topics = [
+        topics = {
             (channel.topic, channel.message_encoding)
             for channel in summary["channels"].values()
-        ]
-        ref_topics = [
+        }
+        ref_topics = {
             (channel.topic, channel.message_encoding)
             for channel in ref_summary["channels"].values()
-        ]
+        }
         assert topics == ref_topics, "Topics mismatch"
 
         # Test messages
