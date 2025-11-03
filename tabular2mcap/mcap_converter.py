@@ -17,6 +17,7 @@ from .converter.functions import (
     generate_generic_converter_func,
 )
 from .converter.others import (
+    LogConverter,
     compressed_image_message_iterator,
     compressed_video_message_iterator,
 )
@@ -30,6 +31,7 @@ from .loader import (
 from .loader.models import (
     CompressedImageMappingConfig,
     CompressedVideoMappingConfig,
+    LogMappingConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,21 +54,24 @@ class McapConverter:
 
     def __init__(
         self,
-        config_path: Path,
+        config_path: Path | McapConversionConfig,
         converter_functions_path: Path,
     ):
         """
         Initialize the MCAP converter.
 
         Args:
-            config_path: Path to the configuration file
+            config_path: Path to the configuration file or McapConversionConfig object
             converter_functions_path: Path to the converter functions file
         """
         self.config_path = config_path
         self.converter_functions_path = converter_functions_path
 
         # Load configuration
-        self.mcap_config = load_mcap_conversion_config(config_path)
+        if isinstance(config_path, McapConversionConfig):
+            self.mcap_config = config_path
+        else:
+            self.mcap_config = load_mcap_conversion_config(config_path)
 
         # Load converter functions
         self.converter_functions = self._load_converter_functions()
@@ -373,6 +378,26 @@ class McapConverter:
                     topic_name=f"{topic_name_prefix}{other_mapping.topic_suffix}",
                     schema_id=schema_id,
                     data_length=len(video_frames),
+                    unit="fr",
+                )
+            elif isinstance(other_mapping, LogMappingConfig):
+                log_converter = LogConverter(
+                    log_path=input_file,
+                    format_template=other_mapping.format_template,
+                    writer_format=self.mcap_config.writer_format,
+                    zero_first_timestamp=True,
+                    name=relative_path_no_ext,
+                    datetime_format=other_mapping.datetime_format,
+                )
+                self._converter.write_messages_from_iterator(
+                    iterator=enumerate(log_converter.log_iter()),
+                    topic_name=(
+                        "rosout"
+                        if other_mapping.topic_suffix is None
+                        else f"{topic_name_prefix}{other_mapping.topic_suffix}"
+                    ),
+                    schema_id=schema_id,
+                    data_length=None,
                     unit="fr",
                 )
             else:

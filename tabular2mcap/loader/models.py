@@ -82,8 +82,32 @@ class CompressedVideoMappingConfig(FileMatchingConfig):
             return "foxglove.CompressedVideo"
 
 
+class LogMappingConfig(FileMatchingConfig):
+    type: Literal["log"] = "log"
+    topic_suffix: str | None = Field(
+        description="The suffix to append to the topic name for the mapping. If none, the full topic name will be 'rosout'",
+        default=None,
+    )
+    format_template: str = Field(
+        description="The Jinja2 template to use for the format of the log. Uses variables: levelname, asctime, filename, lineno, message.",
+        default=r"^{{levelname}}\s{{asctime}}\s{{filename}}:{{lineno}}\s{{message}}$",
+    )
+    datetime_format: str = Field(
+        description="The format of the timestamp in the log file (default: '%Y-%m-%d %H:%M:%S')",
+        default="%Y-%m-%d %H:%M:%S",
+    )
+
+    def schema_name(self, writer_format: WRITER_FORMATS) -> str:
+        if writer_format == "ros1":
+            return "rosgraph_msgs/Log"
+        elif writer_format == "ros2":
+            return "rcl_interfaces/msg/Log"
+        else:
+            return "foxglove.Log"
+
+
 OtherMappingTypes = Annotated[
-    CompressedImageMappingConfig | CompressedVideoMappingConfig,
+    CompressedImageMappingConfig | CompressedVideoMappingConfig | LogMappingConfig,
     Field(discriminator="type"),
 ]
 

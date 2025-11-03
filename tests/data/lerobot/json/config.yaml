@@ -26,6 +26,12 @@ other_mappings: # doesn't work 100% yet due to time offset
     frame_id: "camera"
     format: "h264"
 
+  - type: "log"
+    file_pattern: '**/episode_000000.log'
+    topic_suffix: null
+    format_template: "^{{levelname}}\\s{{asctime}}\\s{{filename}}:{{lineno}}\\s{{message}}$"
+    datetime_format: "%Y-%m-%d %H:%M:%S"
+
 attachments: []
 
 metadata: []
