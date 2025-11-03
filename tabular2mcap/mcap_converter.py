@@ -54,21 +54,24 @@ class McapConverter:
 
     def __init__(
         self,
-        config_path: Path,
+        config_path: Path | McapConversionConfig,
         converter_functions_path: Path,
     ):
         """
         Initialize the MCAP converter.
 
         Args:
-            config_path: Path to the configuration file
+            config_path: Path to the configuration file or McapConversionConfig object
             converter_functions_path: Path to the converter functions file
         """
         self.config_path = config_path
         self.converter_functions_path = converter_functions_path
 
         # Load configuration
-        self.mcap_config = load_mcap_conversion_config(config_path)
+        if isinstance(config_path, McapConversionConfig):
+            self.mcap_config = config_path
+        else:
+            self.mcap_config = load_mcap_conversion_config(config_path)
 
         # Load converter functions
         self.converter_functions = self._load_converter_functions()
