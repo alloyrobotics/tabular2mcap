@@ -17,6 +17,7 @@ from .converter.functions import (
     generate_generic_converter_func,
 )
 from .converter.others import (
+    LogConverter,
     compressed_image_message_iterator,
     compressed_video_message_iterator,
 )
@@ -30,6 +31,7 @@ from .loader import (
 from .loader.models import (
     CompressedImageMappingConfig,
     CompressedVideoMappingConfig,
+    LogMappingConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -373,6 +375,26 @@ class McapConverter:
                     topic_name=f"{topic_name_prefix}{other_mapping.topic_suffix}",
                     schema_id=schema_id,
                     data_length=len(video_frames),
+                    unit="fr",
+                )
+            elif isinstance(other_mapping, LogMappingConfig):
+                log_converter = LogConverter(
+                    log_path=input_file,
+                    format_template=other_mapping.format_template,
+                    writer_format=self.mcap_config.writer_format,
+                    zero_first_timestamp=True,
+                    name=relative_path_no_ext,
+                    datetime_format=other_mapping.datetime_format,
+                )
+                self._converter.write_messages_from_iterator(
+                    iterator=enumerate(log_converter.log_iter()),
+                    topic_name=(
+                        "rosout"
+                        if other_mapping.topic_suffix is None
+                        else f"{topic_name_prefix}{other_mapping.topic_suffix}"
+                    ),
+                    schema_id=schema_id,
+                    data_length=None,
                     unit="fr",
                 )
             else:

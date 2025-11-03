@@ -1,0 +1,7 @@
+INFO 2025-10-28 15:34:28 alloy1.py:375 Hello World!
+INFO 2025-10-28 15:34:29 alloy2.py:180 OpenCVCamera(0) connected.
+INFO 2025-10-28 15:34:30 alloy2.py:180 OpenCVCamera(1) connected.
+INFO 2025-10-28 15:34:31 alloy1.py:104 my_awesome_follower_arm SO101Follower connected.
+INFO 2025-10-28 15:34:31 alloy2.py:82 my_awesome_leader_arm SO101Leader connected.
+INFO 2025-10-28 15:34:32 ls/utils.py:227 Recording episode 0
+WARNING 2025-10-28 15:34:32 l/darwin.py:211 This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients.
