@@ -677,6 +677,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter" class="md-nav__link">
+    <span class="md-ellipsis">
+      LogConverter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LogConverter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter.log_iter" class="md-nav__link">
+    <span class="md-ellipsis">
+      log_iter
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.others.compressed_image_message_iterator" class="md-nav__link">
     <span class="md-ellipsis">
       compressed_image_message_iterator
@@ -689,6 +722,24 @@
   <a href="#tabular2mcap.converter.others.compressed_video_message_iterator" class="md-nav__link">
     <span class="md-ellipsis">
       compressed_video_message_iterator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.to_foxglove_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_foxglove_log_level
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.to_ros2_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_ros2_log_level
     </span>
   </a>
   
@@ -1072,6 +1123,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter" class="md-nav__link">
+    <span class="md-ellipsis">
+      LogConverter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LogConverter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.LogConverter.log_iter" class="md-nav__link">
+    <span class="md-ellipsis">
+      log_iter
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.others.compressed_image_message_iterator" class="md-nav__link">
     <span class="md-ellipsis">
       compressed_image_message_iterator
@@ -1084,6 +1168,24 @@
   <a href="#tabular2mcap.converter.others.compressed_video_message_iterator" class="md-nav__link">
     <span class="md-ellipsis">
       compressed_video_message_iterator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.to_foxglove_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_foxglove_log_level
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.to_ros2_log_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_ros2_log_level
     </span>
   </a>
   
@@ -2463,6 +2565,294 @@ custom filters, and disables autoescape for JSON-like output.</p>
 
 
 
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="tabular2mcap.converter.others.LogConverter" class="doc doc-heading">
+            <code>LogConverter</code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Converter for parsing log files into MCAP log messages.</p>
+<p>Parses log files using regex patterns defined in a Jinja2 template format.
+Handles multi-line log entries by detecting log entry starts.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="tabular2mcap.converter.others.LogConverter.log_path">log_path</span></code></td>
+            <td>
+                  <code><span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the log file to parse</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="tabular2mcap.converter.others.LogConverter.name">name</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name identifier for the log source (default: "Log")</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="tabular2mcap.converter.others.LogConverter.datetime_format">datetime_format</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Format of the timestamp in the log file (default: "%Y-%m-%d %H:%M:%S")</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="tabular2mcap.converter.others.LogConverter.zero_first_timestamp">zero_first_timestamp</span></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, the first timestamp will be 0</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="tabular2mcap.converter.others.LogConverter.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="n">format_template</span><span class="p">,</span> <span class="n">writer_format</span><span class="p">,</span> <span class="n">zero_first_timestamp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Log&#39;</span><span class="p">,</span> <span class="n">datetime_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Initialize log converter.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>log_path</code>
+            </td>
+            <td>
+                  <code><span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the log file to parse</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format_template</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Jinja2 template string for regex pattern. Uses variables:
+levelname, message, asctime (default format: 'YYYY-MM-DD HH:MM:SS'), filename, lineno</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>writer_format</code>
+            </td>
+            <td>
+                  <code><span title="tabular2mcap.loader.models.WRITER_FORMATS">WRITER_FORMATS</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Writer format to use for the log messages</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>zero_first_timestamp</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, the first timestamp will be 0</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name identifier for the log source</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;Log&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>datetime_format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Format of the timestamp in the log file (default: "%Y-%m-%d %H:%M:%S")</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;%Y-%m-%d %H:%M:%S&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="tabular2mcap.converter.others.LogConverter.log_iter" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">log_iter</span><span class="p">()</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Generate log messages from log data.</p>
+<p>Parses log file entries and yields ConvertedRow objects containing
+foxglove.Log format messages. Handles multi-line log entries.</p>
+
+
+    <p><span class="doc-section-title">Yields:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="collections.abc.Iterable">Iterable</span>[<span title="tabular2mcap.converter.common.ConvertedRow">ConvertedRow</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ConvertedRow with log message data in foxglove.Log format.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="collections.abc.Iterable">Iterable</span>[<span title="tabular2mcap.converter.common.ConvertedRow">ConvertedRow</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Each entry contains timestamp (epoch time), level, message, file, and line.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2494,6 +2884,156 @@ custom filters, and disables autoescape for JSON-like output.</p>
     <div class="doc doc-contents ">
 
         <p>Generate compressed video messages from video frames.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.others.to_foxglove_log_level" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_foxglove_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert log level string to foxglove.Log level constant.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>level</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Log level string (DEBUG, INFO, WARNING, ERROR, FATAL)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Integer level constant for foxglove.Log:
+- DEBUG: 1
+- INFO: 2
+- WARNING: 3
+- ERROR: 4
+- FATAL: 5
+- Unknown: 0</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.others.to_ros2_log_level" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_ros2_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert log level string to ROS2 log level constant.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>level</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Log level string (DEBUG, INFO, WARNING, ERROR, FATAL)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Integer level constant for ROS2 log</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
