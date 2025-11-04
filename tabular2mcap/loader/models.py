@@ -164,6 +164,10 @@ class ConverterFunctionDefinition(BaseModel):
         description="Jinja2 template to use to map columns to publish time ns. If none, the publish time will be log_time",
         default=None,
     )
+    available_columns: list[str] = Field(
+        description="The columns that are available for the mapping. Not yet used. Placeholder for future template validation.",
+        default=list,
+    )
 
 
 class ConverterFunctionFile(BaseModel):

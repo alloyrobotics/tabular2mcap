@@ -2,6 +2,8 @@
 
 Learn how to create configuration files that convert your CSV data to MCAP format.
 
+> **Example**: See a complete working example in the [alloy dataset folder](https://github.com/alloyrobotics/tabular2mcap/tree/main/tests/data/alloy) which includes sample CSV files, config files, and converter functions for both JSON and ROS2 formats.
+
 ## Step 1: Analyze Your CSV Data
 
 Suppose you have data from a wheeled robot with GPS, sensor readings, and camera:
@@ -23,13 +25,13 @@ Map your CSV files to MCAP topics and message types using `config.yaml`:
 
 ```yaml
 # config.yaml
-writer_format: "json"
+writer_format: "ros2"
 
 tabular_mappings:
   - file_pattern: "location.csv"
     converter_functions:
       - function_name: "row_to_location_fix"
-        schema_name: "foxglove.LocationFix"
+        schema_name: "sensor_msgs/msg/NavSatFix"
         topic_suffix: "LocationFix"
 
   - file_pattern: "sensor.csv"
@@ -53,20 +55,32 @@ metadata:
 
 ## Step 3: Create Converter Functions
 
-Define Jinja2 templates in `converter_functions.yaml` to transform CSV rows into messages. Use `| int` and `| float` filters for type conversion.
+Auto-generate `converter_functions.yaml` from your `config.yaml`:
+
+```bash
+tabular2mcap gen -i /path/to/data/directory -c config.yaml -f converter_functions.yaml
+```
+
+This generates template converter functions with empty Jinja2 templates. Edit the generated file to fill in your transformation logic using `| int` and `| float` filters for type conversion.
 
 ```yaml
-# converter_functions.yaml
+# converter_functions.yaml (auto-generated, then customized)
 functions:
   row_to_location_fix:
-    description: "Convert GPS coordinates to Foxglove LocationFix"
+    description: "Convert GPS coordinates to ROS2 NavSatFix"
     template: |
       {
-        "timestamp": {
-          "sec": {{ timestamp_sec | int }},
-          "nsec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+        "header": {
+          "stamp": {
+            "sec": {{ timestamp_sec | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "gps"
         },
-        "frame_id": "gps",
+        "status": {
+          "status": 0,
+          "service": 1
+        },
         "latitude": {{ latitude | float }},
         "longitude": {{ longitude | float }},
         "altitude": {{ altitude | float }},

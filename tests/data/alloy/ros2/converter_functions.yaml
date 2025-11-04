@@ -1,1 +1,133 @@
-functions: {}
+functions:
+  row_to_location_fix:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/NavSatFix
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "gps"
+        },
+        "status": {
+          "status": 0,
+          "service": 1,
+          "_constants": "STATUS_UNKNOWN=-2, STATUS_NO_FIX=-1, STATUS_FIX=0, STATUS_SBAS_FIX=1, STATUS_GBAS_FIX=2, SERVICE_UNKNOWN=0, SERVICE_GPS=1, SERVICE_GLONASS=2, SERVICE_COMPASS=4, SERVICE_GALILEO=8"
+        },
+        "latitude": {{ latitude | float }},
+        "longitude": {{ longitude | float }},
+        "altitude": {{ altitude | float }},
+        "position_covariance": [
+          {{ (latitude_error or 0) ** 2 }},
+          0, 0,
+          0,
+          {{ (longitude_error or 0) ** 2 }},
+          0,
+          0, 0,
+          {{ (altitude_error or 0) ** 2 }}
+        ],
+        "position_covariance_type": 2,
+        "_constants": "COVARIANCE_TYPE_UNKNOWN=0, COVARIANCE_TYPE_APPROXIMATED=1, COVARIANCE_TYPE_DIAGONAL_KNOWN=2, COVARIANCE_TYPE_KNOWN=3"
+      }
+  row_to_pressure1:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/FluidPressure
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "pressure1"
+        },
+        "fluid_pressure": {{ pressure1 | float }},
+        "variance": 0.0
+      }
+  row_to_pressure2:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: std_msgs/msg/Float32
+    template: |-
+      {
+        "data": {{ pressure2 | float }}
+      }
+  row_to_sensor3:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/Temperature
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "sensor3"
+        },
+        "temperature": {{ sensor3 | float }},
+        "variance": 0.0
+      }
+  row_to_sensor4:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/RelativeHumidity
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "sensor4"
+        },
+        "relative_humidity": {{ sensor4 | float }},
+        "variance": 0.0
+      }
+  row_to_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'
+  row_to_transform:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: geometry_msgs/msg/TransformStamped
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "world"
+        },
+        "child_frame_id": "gps",
+        "transform": {
+          "translation": {{ latlon_to_utm(latitude, longitude, altitude) | safe }},
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        }
+      }

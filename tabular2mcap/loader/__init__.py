@@ -9,8 +9,10 @@ import yaml
 from tabular2mcap.loader.models import (
     CompressedImageMappingConfig,
     CompressedVideoMappingConfig,
+    ConverterFunctionDefinition,
     ConverterFunctionFile,
     FileMatchingConfig,
+    LogMappingConfig,
     McapConversionConfig,
     OtherMappingTypes,
     TabularMappingConfig,
@@ -69,12 +71,41 @@ def load_converter_function_definitions(path: Path) -> ConverterFunctionFile:
     return ConverterFunctionFile.model_validate(definitions)
 
 
+def str_presenter(dumper, data):
+    if "\n" in data:  # check for multiline string
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+yaml.SafeDumper.add_representer(str, str_presenter)
+
+
+def export_converter_function_definitions(
+    conv_func_file: ConverterFunctionFile, path: Path
+) -> None:
+    """Export converter function definitions to YAML file.
+
+    Args:
+        conv_func_file: Converter function file
+        path: Path to the converter functions file.
+    """
+    with open(path, "w") as f:
+        yaml.safe_dump(
+            data=conv_func_file.model_dump(),
+            stream=f,
+            default_flow_style=False,
+            width=float("inf"),  # Prevent automatic line wrapping
+        )
+
+
 __all__ = [
     "AttachmentConfig",
     "CompressedImageMappingConfig",
     "CompressedVideoMappingConfig",
+    "ConverterFunctionDefinition",
     "ConverterFunctionFile",
     "FileMatchingConfig",
+    "LogMappingConfig",
     "McapConversionConfig",
     "MetadataConfig",
     "OtherMappingTypes",

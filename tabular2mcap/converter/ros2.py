@@ -4,12 +4,13 @@ from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
+from mcap_ros2._vendor.rosidl_adapter import parser as ros2_parser
 from mcap_ros2.writer import Writer as McapRos2Writer
 from tqdm import tqdm
 
 from tabular2mcap.schemas.ros2msg import get_schema_definition
 
-from .common import ConvertedRow, ConverterBase
+from .common import ConvertedRow, ConverterBase, jinja2_json_dump
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +44,91 @@ def sanitize_ros2_field_name(key: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_]", "_", key).lower()
 
 
+def ros2_msg_to_template(msg_def_text: str, msg_type: str) -> dict:
+    """Convert ROS2 message definition directly to template dict."""
+
+    match = re.match(r"^([^/]+)/(?:msg/)?([^/]+)$", msg_type)
+    if not match:
+        raise ValueError(f"Invalid message type format: {msg_type}")
+    pkg_name, msg_name = match.groups()
+
+    # Parse all message definitions (main + dependencies)
+    msg_defs = {}
+    sections = msg_def_text.split("=" * 80)
+
+    # First section is main message
+    msg_defs[msg_type] = ros2_parser.parse_message_string(
+        pkg_name, msg_name, sections[0].strip()
+    )
+    # Parse dependency sections
+    for section in sections[1:]:
+        if not (lines := section.strip().split("\n", 1)) or len(lines) < 2:
+            continue
+        if match := re.match(r"MSG: ([^/]+)/(?:msg/)?([^/]+)", lines[0]):
+            dep_pkg, dep_name = match.groups()
+            msg_defs[f"{dep_pkg}/{dep_name}"] = ros2_parser.parse_message_string(
+                dep_pkg, dep_name, lines[1].strip()
+            )
+
+    def to_template_value(field, col_name: str = "") -> Any:
+        field_type_str = str(field.type)
+        if field.type.is_primitive_type():
+            if "int" in field_type_str:
+                filter_str = " | int"
+            elif "float" in field_type_str:
+                filter_str = " | float"
+            else:
+                filter_str = ""
+            if field.type.is_array:
+                count = field.type.array_size or 1
+                return [
+                    f"{{{{ <{col_name}_{idx}_column>{filter_str} }}}}"
+                    for idx in range(count)
+                ]
+            else:
+                return f"{{{{ <{col_name}_column>{filter_str} }}}}"
+        else:
+            field_type_str = str(field.type)
+            if field_type_str in (
+                "builtin_interfaces/Time",
+                "builtin_interfaces/Duration",
+            ):
+                template = {
+                    "sec": "{{ <sec_column> | int }}",
+                    "nanosec": "{{ <nanosec_column> | int }}",
+                }
+            elif field_type_str in msg_defs:
+                nested_def = msg_defs[field_type_str]
+                template = {
+                    f.name: to_template_value(f, f.name) for f in nested_def.fields
+                }
+                if nested_def.constants:
+                    template["_constants"] = ", ".join(
+                        [f"{c.name}={c.value}" for c in nested_def.constants]
+                    )
+            else:
+                template = f"{{{{ <{col_name}_column> }}}}"
+
+            if field.type.is_array:
+                count = field.type.array_size or 1
+                return [template] * count
+            else:
+                return template
+
+    template = {f.name: to_template_value(f, f.name) for f in msg_defs[msg_type].fields}
+    if msg_defs[msg_type].constants:
+        template["_constants"] = ", ".join(
+            [f"{c.name}={c.value}" for c in msg_defs[msg_type].constants]
+        )
+    return template
+
+
 class Ros2Converter(ConverterBase):
     """ROS2 format converter that wraps ROS2-specific MCAP writer operations."""
 
-    _writer: McapRos2Writer
+    _writer: McapRos2Writer | None
 
-    def __init__(self, writer: McapRos2Writer):
+    def __init__(self, writer: McapRos2Writer | None = None):
         """Initialize the ROS2 converter with a writer instance.
 
         Args:
@@ -136,6 +216,19 @@ class Ros2Converter(ConverterBase):
         schema_text = get_schema_definition(schema_name, "jazzy")
         schema = self._writer.register_msgdef(schema_name, schema_text)
         return schema
+
+    def get_schema_template(self, schema_name: str) -> str:
+        """Get the schema template for a given ROS2 schema name.
+
+        Args:
+            schema_name: Name of the ROS2 schema (e.g., 'sensor_msgs/msg/NavSatFix')
+
+        Returns:
+            Schema template
+        """
+        schema_text = get_schema_definition(schema_name, "jazzy")
+        template = ros2_msg_to_template(schema_text, schema_name)
+        return jinja2_json_dump(template)
 
     def write_messages_from_iterator(
         self,

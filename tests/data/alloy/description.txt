@@ -1,0 +1,28 @@
+Data Description for Alloy Test Dataset
+==========================================
+
+Sample tabular data files for testing the tabular2mcap conversion tool.
+
+location.csv
+------------
+GPS location data with timestamp and error estimates (San Francisco area).
+- timestamp_sec: Unix timestamp (float), 1698768000.0 to 1698768059.0 (1 Hz, 60 seconds)
+- latitude: Decimal degrees (float), 37.7749° to 37.7808° (San Francisco)
+- longitude: Decimal degrees (float), -122.4194° to -122.4135° (San Francisco)
+- altitude: Meters above sea level (float), 25.5m to 43.2m
+- latitude_error: Uncertainty in degrees (float), constant 0.0005°
+- longitude_error: Uncertainty in degrees (float), constant 0.0005°
+- altitude_error: Uncertainty in meters (float), constant 1.2m
+
+Data shows gradual northeast movement with increasing altitude.
+
+sensor.csv
+----------
+Sensor readings with timestamp and multiple measurements.
+- timestamp_sec: Unix timestamp (float), 1698768000.0 to 1698768059.0 (synchronized with location.csv)
+- pressure1: Atmospheric pressure in hPa (float), 1013.25 to 1015.02
+- pressure2: Atmospheric pressure in hPa (float), 1013.30 to 1015.07
+- sensor3: Temperature in °C (float), 23.5 to 29.4
+- sensor4: Humidity in % (float), 45.2 to 51.1
+
+All values show gradual increases over the 60-second time window.
