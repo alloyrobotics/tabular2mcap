@@ -651,6 +651,9 @@
 
 <h1 id="tutorial-setting-up-the-config-to-convert-csv-to-mcap">Tutorial: Setting up the config to convert CSV to MCAP</h1>
 <p>Learn how to create configuration files that convert your CSV data to MCAP format.</p>
+<blockquote>
+<p><strong>Example</strong>: See a complete working example in the <a href="https://github.com/alloyrobotics/tabular2mcap/tree/main/tests/data/alloy">alloy dataset folder</a> which includes sample CSV files, config files, and converter functions for both JSON and ROS2 formats.</p>
+</blockquote>
 <h2 id="step-1-analyze-your-csv-data">Step 1: Analyze Your CSV Data</h2>
 <p>Suppose you have data from a wheeled robot with GPS, sensor readings, and camera:</p>
 <div class="highlight"><pre><span></span><code>data/
@@ -663,13 +666,13 @@
 <h2 id="step-2-create-configuration-file">Step 2: Create Configuration File</h2>
 <p>Map your CSV files to MCAP topics and message types using <code>config.yaml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># config.yaml</span>
-<span class="nt">writer_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="nt">writer_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ros2&quot;</span>
 
 <span class="nt">tabular_mappings</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;location.csv&quot;</span>
 <span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_location_fix&quot;</span>
-<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foxglove.LocationFix&quot;</span>
+<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor_msgs/msg/NavSatFix&quot;</span>
 <span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;LocationFix&quot;</span>
 
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor.csv&quot;</span>
@@ -691,18 +694,27 @@
 <span class="w">    </span><span class="nt">separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span>
 </code></pre></div>
 <h2 id="step-3-create-converter-functions">Step 3: Create Converter Functions</h2>
-<p>Define Jinja2 templates in <code>converter_functions.yaml</code> to transform CSV rows into messages. Use <code>| int</code> and <code>| float</code> filters for type conversion.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># converter_functions.yaml</span>
+<p>Auto-generate <code>converter_functions.yaml</code> from your <code>config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code>tabular2mcap<span class="w"> </span>gen<span class="w"> </span>-i<span class="w"> </span>/path/to/data/directory<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-f<span class="w"> </span>converter_functions.yaml
+</code></pre></div>
+<p>This generates template converter functions with empty Jinja2 templates. Edit the generated file to fill in your transformation logic using <code>| int</code> and <code>| float</code> filters for type conversion.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># converter_functions.yaml (auto-generated, then customized)</span>
 <span class="nt">functions</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">row_to_location_fix</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">GPS</span><span class="nv"> </span><span class="s">coordinates</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">Foxglove</span><span class="nv"> </span><span class="s">LocationFix&quot;</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Convert</span><span class="nv"> </span><span class="s">GPS</span><span class="nv"> </span><span class="s">coordinates</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">ROS2</span><span class="nv"> </span><span class="s">NavSatFix&quot;</span>
 <span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">      </span><span class="no">{</span>
-<span class="w">        </span><span class="no">&quot;timestamp&quot;: {</span>
-<span class="w">          </span><span class="no">&quot;sec&quot;: {{ timestamp_sec | int }},</span>
-<span class="w">          </span><span class="no">&quot;nsec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
+<span class="w">        </span><span class="no">&quot;header&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;stamp&quot;: {</span>
+<span class="w">            </span><span class="no">&quot;sec&quot;: {{ timestamp_sec | int }},</span>
+<span class="w">            </span><span class="no">&quot;nanosec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
+<span class="w">          </span><span class="no">},</span>
+<span class="w">          </span><span class="no">&quot;frame_id&quot;: &quot;gps&quot;</span>
 <span class="w">        </span><span class="no">},</span>
-<span class="w">        </span><span class="no">&quot;frame_id&quot;: &quot;gps&quot;,</span>
+<span class="w">        </span><span class="no">&quot;status&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;status&quot;: 0,</span>
+<span class="w">          </span><span class="no">&quot;service&quot;: 1</span>
+<span class="w">        </span><span class="no">},</span>
 <span class="w">        </span><span class="no">&quot;latitude&quot;: {{ latitude | float }},</span>
 <span class="w">        </span><span class="no">&quot;longitude&quot;: {{ longitude | float }},</span>
 <span class="w">        </span><span class="no">&quot;altitude&quot;: {{ altitude | float }},</span>

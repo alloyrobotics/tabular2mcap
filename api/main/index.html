@@ -851,7 +851,7 @@ For more control, use McapConverter directly.</p>
 
 
 <h3 id="tabular2mcap.McapConverter.__init__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">converter_functions_path</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">converter_functions_path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h3>
 
@@ -877,7 +877,7 @@ For more control, use McapConverter directly.</p>
                 <code>config_path</code>
             </td>
             <td>
-                  <code><span title="pathlib.Path">Path</span> | <span title="tabular2mcap.loader.McapConversionConfig">McapConversionConfig</span></code>
+                  <code><span title="pathlib.Path">Path</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -885,7 +885,7 @@ For more control, use McapConverter directly.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -893,7 +893,7 @@ For more control, use McapConverter directly.</p>
                 <code>converter_functions_path</code>
             </td>
             <td>
-                  <code><span title="pathlib.Path">Path</span></code>
+                  <code><span title="pathlib.Path">Path</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -901,7 +901,7 @@ For more control, use McapConverter directly.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>

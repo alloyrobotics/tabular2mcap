@@ -453,6 +453,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.json.JsonConverter.get_schema_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_schema_template
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.json.JsonConverter.register_generic_schema" class="md-nav__link">
     <span class="md-ellipsis">
       register_generic_schema
@@ -481,6 +490,15 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.json.json_schema_to_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      json_schema_to_template
+    </span>
+  </a>
   
 </li>
         
@@ -546,6 +564,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.ros2.Ros2Converter.get_schema_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_schema_template
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.ros2.Ros2Converter.register_generic_schema" class="md-nav__link">
     <span class="md-ellipsis">
       register_generic_schema
@@ -590,6 +617,15 @@
   <a href="#tabular2mcap.converter.ros2.numpy_to_ros2_type" class="md-nav__link">
     <span class="md-ellipsis">
       numpy_to_ros2_type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.ros2.ros2_msg_to_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      ros2_msg_to_template
     </span>
   </a>
   
@@ -899,6 +935,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.json.JsonConverter.get_schema_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_schema_template
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.json.JsonConverter.register_generic_schema" class="md-nav__link">
     <span class="md-ellipsis">
       register_generic_schema
@@ -927,6 +972,15 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.json.json_schema_to_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      json_schema_to_template
+    </span>
+  </a>
   
 </li>
         
@@ -992,6 +1046,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.ros2.Ros2Converter.get_schema_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_schema_template
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.ros2.Ros2Converter.register_generic_schema" class="md-nav__link">
     <span class="md-ellipsis">
       register_generic_schema
@@ -1036,6 +1099,15 @@
   <a href="#tabular2mcap.converter.ros2.numpy_to_ros2_type" class="md-nav__link">
     <span class="md-ellipsis">
       numpy_to_ros2_type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.ros2.ros2_msg_to_template" class="md-nav__link">
+    <span class="md-ellipsis">
+      ros2_msg_to_template
     </span>
   </a>
   
@@ -1317,7 +1389,7 @@
 
 
 <h4 id="tabular2mcap.converter.json.JsonConverter.__init__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">writer</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">writer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h4>
 
@@ -1343,7 +1415,7 @@
                 <code>writer</code>
             </td>
             <td>
-                  <code><span title="mcap.writer.Writer">Writer</span></code>
+                  <code><span title="mcap.writer.Writer">Writer</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1351,7 +1423,79 @@
               </div>
             </td>
             <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="tabular2mcap.converter.json.JsonConverter.get_schema_template" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_schema_template</span><span class="p">(</span><span class="n">schema_name</span><span class="p">)</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get the schema template for a given schema name.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>schema_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the schema</p>
+              </div>
+            </td>
+            <td>
                 <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Schema template</p>
+              </div>
             </td>
           </tr>
       </tbody>
@@ -1663,6 +1807,24 @@
 <div class="doc doc-object doc-function">
 
 
+<h3 id="tabular2mcap.converter.json.json_schema_to_template" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">json_schema_to_template</span><span class="p">(</span><span class="n">schema_json_str</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert schema JSON to template dict with only properties.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="tabular2mcap.converter.json.register_foxglove_schema" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">register_foxglove_schema</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">schema_name</span><span class="p">)</span></code>
 
@@ -1956,7 +2118,7 @@
 
 
 <h4 id="tabular2mcap.converter.ros2.Ros2Converter.__init__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">writer</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">writer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h4>
 
@@ -1982,7 +2144,7 @@
                 <code>writer</code>
             </td>
             <td>
-                  <code><span title="mcap_ros2.writer.Writer">Writer</span></code>
+                  <code><span title="mcap_ros2.writer.Writer">Writer</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1990,7 +2152,79 @@
               </div>
             </td>
             <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="tabular2mcap.converter.ros2.Ros2Converter.get_schema_template" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_schema_template</span><span class="p">(</span><span class="n">schema_name</span><span class="p">)</span></code>
+
+</h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get the schema template for a given ROS2 schema name.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>schema_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the ROS2 schema (e.g., 'sensor_msgs/msg/NavSatFix')</p>
+              </div>
+            </td>
+            <td>
                 <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Schema template</p>
+              </div>
             </td>
           </tr>
       </tbody>
@@ -2333,6 +2567,24 @@
     <div class="doc doc-contents ">
 
         <p>Convert numpy dtype to ROS2 type.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.ros2.ros2_msg_to_template" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">ros2_msg_to_template</span><span class="p">(</span><span class="n">msg_def_text</span><span class="p">,</span> <span class="n">msg_type</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert ROS2 message definition directly to template dict.</p>
 
 
     </div>
