@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from mcap.reader import make_reader
 
-from tabular2mcap import convert_tabular_to_mcap
+from tabular2mcap import convert_tabular_to_mcap, generate_converter_functions
 
 DATA_PATH = Path(__file__).parent / "data"
 TEST_OUTPUT_PATH = Path(__file__).parent / "test_output"
@@ -115,3 +115,31 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
         for metadata in metadata_records:
             original_file = ref_folder / metadata.name
             assert original_file.exists(), f"Original file not found: {original_file}"
+
+
+@pytest.mark.parametrize("mcap_name", ALL_MCAP_NAMES)
+@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+def test_generate_converter_functions(mcap_name: str, writer_format: str):
+    """Test converter function generation."""
+    input_path = DATA_PATH / mcap_name
+    output_path = (
+        TEST_OUTPUT_PATH
+        / writer_format
+        / mcap_name
+        / "generated_converter_functions.yaml"
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    generate_converter_functions(
+        input_path=input_path,
+        config_path=input_path / writer_format / "config.yaml",
+        converter_functions_path=output_path,
+    )
+
+    # compare the output with the reference
+    ref_output_path = input_path / writer_format / "generated_converter_functions.yaml"
+    with open(output_path) as f:
+        output_content = f.read()
+    with open(ref_output_path) as ref_f:
+        ref_content = ref_f.read()
+    assert output_content == ref_content, "Converter functions mismatch"

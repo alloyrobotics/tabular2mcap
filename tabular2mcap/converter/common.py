@@ -100,3 +100,39 @@ class ConverterBase(ABC):
             Schema template
         """
         ...
+
+
+def _to_json_string(obj: Any, indent: int, current_indent: int = 0) -> str:
+    """Convert object to JSON string with all values quoted."""
+    indent_str = " " * current_indent
+    next_indent = current_indent + indent
+
+    if isinstance(obj, dict):
+        if not obj:
+            return "{}"
+        items = []
+        for key, value in obj.items():
+            key_str = f'"{key}"'
+            value_str = _to_json_string(value, indent, next_indent)
+            items.append(f"{indent_str}  {key_str}: {value_str}")
+        return "{\n" + ",\n".join(items) + f"\n{indent_str}}}"
+    elif isinstance(obj, list):
+        if not obj:
+            return "[]"
+        items = [_to_json_string(item, indent, next_indent) for item in obj]
+        return (
+            "[\n"
+            + ",\n".join(f"{indent_str}  {item}" for item in items)
+            + f"\n{indent_str}]"
+        )
+    else:
+        # Always quote values as strings
+        if "| int" in obj or "| float" in obj:
+            return f"{obj}"
+        else:
+            return f'"{obj}"'
+
+
+def jinja2_json_dump(data: dict, indent: int = 2) -> str:
+    """Dump a dictionary to a JSON string with all values properly quoted."""
+    return _to_json_string(data, indent)

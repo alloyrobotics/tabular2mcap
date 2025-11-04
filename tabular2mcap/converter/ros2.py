@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from collections.abc import Iterable
@@ -11,7 +10,7 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas.ros2msg import get_schema_definition
 
-from .common import ConvertedRow, ConverterBase
+from .common import ConvertedRow, ConverterBase, jinja2_json_dump
 
 logger = logging.getLogger(__name__)
 
@@ -103,9 +102,10 @@ def ros2_msg_to_template(msg_def_text: str, msg_type: str) -> dict:
                 template = {
                     f.name: to_template_value(f, f.name) for f in nested_def.fields
                 }
-                template["_constants"] = ", ".join(
-                    [f"{c.name}={c.value}" for c in nested_def.constants]
-                )
+                if nested_def.constants:
+                    template["_constants"] = ", ".join(
+                        [f"{c.name}={c.value}" for c in nested_def.constants]
+                    )
             else:
                 template = f"{{{{ <{col_name}_column> }}}}"
 
@@ -116,9 +116,10 @@ def ros2_msg_to_template(msg_def_text: str, msg_type: str) -> dict:
                 return template
 
     template = {f.name: to_template_value(f, f.name) for f in msg_defs[msg_type].fields}
-    template["_constants"] = ", ".join(
-        [f"{c.name}={c.value}" for c in msg_defs[msg_type].constants]
-    )
+    if msg_defs[msg_type].constants:
+        template["_constants"] = ", ".join(
+            [f"{c.name}={c.value}" for c in msg_defs[msg_type].constants]
+        )
     return template
 
 
@@ -227,7 +228,7 @@ class Ros2Converter(ConverterBase):
         """
         schema_text = get_schema_definition(schema_name, "jazzy")
         template = ros2_msg_to_template(schema_text, schema_name)
-        return json.dumps(template, indent=2)
+        return jinja2_json_dump(template)
 
     def write_messages_from_iterator(
         self,

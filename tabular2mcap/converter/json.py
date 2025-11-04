@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas import get_foxglove_jsonschema
 
-from .common import ConvertedRow, ConverterBase
+from .common import ConvertedRow, ConverterBase, jinja2_json_dump
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,8 @@ def to_template_value(prop_def: dict, col_name: str = "") -> Any:
     elif prop_type == "array":
         items = prop_def.get("items", {})
         count = prop_def.get("minItems", 1)
-        if items.get("type") == "object" and "properties" in items:
+        item_type = items.get("type")
+        if item_type == "object" and "properties" in items:
             return [
                 {
                     n: to_template_value(d, f"{n}_{idx}")
@@ -114,7 +115,16 @@ def to_template_value(prop_def: dict, col_name: str = "") -> Any:
                 for idx in range(count)
             ]
         else:
-            return [f"{{{{ <{f'{col_name}_{idx}_column'}> }}}}" for idx in range(count)]
+            if item_type == "integer":
+                filter_str = " | int"
+            elif item_type == "number":
+                filter_str = " | float"
+            else:
+                filter_str = ""
+            return [
+                f"{{{{ <{f'{col_name}_{idx}_column'}>{filter_str} }}}}"
+                for idx in range(count)
+            ]
     else:
         comment_str = ""
         filter_str = ""
@@ -123,6 +133,7 @@ def to_template_value(prop_def: dict, col_name: str = "") -> Any:
             comment_str = " # one of " + " or ".join(
                 [f"{option['const']} ({option['title']})" for option in options]
             )
+            filter_str = " | int"
         elif prop_type == "integer":
             filter_str = " | int"
         elif prop_type == "number":
@@ -311,7 +322,7 @@ class JsonConverter(ConverterBase):
             # Get schema data
             schema_data = get_foxglove_jsonschema(schema_name.removeprefix("foxglove."))
             data = json_schema_to_template(schema_data)
-            return json.dumps(data, indent=2)
+            return jinja2_json_dump(data)
         else:
             raise ValueError(
                 f"Unknown schema: {schema_name}. Must be prefixed with 'foxglove.' or none."

@@ -1,0 +1,139 @@
+functions:
+  row_to_location_fix:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/NavSatFix
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ <sec_column> | int }},
+            "nanosec": {{ <nanosec_column> | int }}
+          },
+          "frame_id": "{{ <frame_id_column> }}"
+        },
+        "status": {
+          "status": {{ <status_column> | int }},
+          "service": {{ <service_column> | int }},
+          "_constants": "STATUS_UNKNOWN=-2, STATUS_NO_FIX=-1, STATUS_FIX=0, STATUS_SBAS_FIX=1, STATUS_GBAS_FIX=2, SERVICE_UNKNOWN=0, SERVICE_GPS=1, SERVICE_GLONASS=2, SERVICE_COMPASS=4, SERVICE_GALILEO=8"
+        },
+        "latitude": {{ <latitude_column> | float }},
+        "longitude": {{ <longitude_column> | float }},
+        "altitude": {{ <altitude_column> | float }},
+        "position_covariance": [
+          {{ <position_covariance_0_column> | float }},
+          {{ <position_covariance_1_column> | float }},
+          {{ <position_covariance_2_column> | float }},
+          {{ <position_covariance_3_column> | float }},
+          {{ <position_covariance_4_column> | float }},
+          {{ <position_covariance_5_column> | float }},
+          {{ <position_covariance_6_column> | float }},
+          {{ <position_covariance_7_column> | float }},
+          {{ <position_covariance_8_column> | float }}
+        ],
+        "position_covariance_type": {{ <position_covariance_type_column> | int }},
+        "_constants": "COVARIANCE_TYPE_UNKNOWN=0, COVARIANCE_TYPE_APPROXIMATED=1, COVARIANCE_TYPE_DIAGONAL_KNOWN=2, COVARIANCE_TYPE_KNOWN=3"
+      }
+  row_to_pressure1:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/FluidPressure
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ <sec_column> | int }},
+            "nanosec": {{ <nanosec_column> | int }}
+          },
+          "frame_id": "{{ <frame_id_column> }}"
+        },
+        "fluid_pressure": {{ <fluid_pressure_column> | float }},
+        "variance": {{ <variance_column> | float }}
+      }
+  row_to_pressure2:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: std_msgs/msg/Float32
+    template: |-
+      {
+        "data": {{ <data_column> | float }}
+      }
+  row_to_sensor3:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/Temperature
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ <sec_column> | int }},
+            "nanosec": {{ <nanosec_column> | int }}
+          },
+          "frame_id": "{{ <frame_id_column> }}"
+        },
+        "temperature": {{ <temperature_column> | float }},
+        "variance": {{ <variance_column> | float }}
+      }
+  row_to_sensor4:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: sensor_msgs/msg/RelativeHumidity
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ <sec_column> | int }},
+            "nanosec": {{ <nanosec_column> | int }}
+          },
+          "frame_id": "{{ <frame_id_column> }}"
+        },
+        "relative_humidity": {{ <relative_humidity_column> | float }},
+        "variance": {{ <variance_column> | float }}
+      }
+  row_to_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'
+  row_to_transform:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: geometry_msgs/msg/TransformStamped
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ <sec_column> | int }},
+            "nanosec": {{ <nanosec_column> | int }}
+          },
+          "frame_id": "{{ <frame_id_column> }}"
+        },
+        "child_frame_id": "{{ <child_frame_id_column> }}",
+        "transform": {
+          "translation": {
+            "x": {{ <x_column> | float }},
+            "y": {{ <y_column> | float }},
+            "z": {{ <z_column> | float }}
+          },
+          "rotation": {
+            "x": {{ <x_column> | float }},
+            "y": {{ <y_column> | float }},
+            "z": {{ <z_column> | float }},
+            "w": {{ <w_column> | float }}
+          }
+        }
+      }
