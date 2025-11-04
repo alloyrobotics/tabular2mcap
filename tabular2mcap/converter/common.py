@@ -88,3 +88,15 @@ class ConverterBase(ABC):
             unit: Unit label for progress tracking
         """
         ...
+
+    @abstractmethod
+    def get_schema_template(self, schema_name: str) -> str:
+        """Get the schema template for a given schema name.
+
+        Args:
+            schema_name: Name of the schema
+
+        Returns:
+            Schema template
+        """
+        ...

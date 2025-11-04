@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from mcap.writer import Writer as McapWriter
 from mcap_ros2.writer import Writer as McapRos2Writer
 from tqdm import tqdm
@@ -22,16 +23,17 @@ from .converter.others import (
     compressed_video_message_iterator,
 )
 from .loader import (
+    CompressedImageMappingConfig,
+    CompressedVideoMappingConfig,
+    ConverterFunctionDefinition,
+    ConverterFunctionFile,
+    LogMappingConfig,
     McapConversionConfig,
+    export_converter_function_definitions,
     load_converter_function_definitions,
     load_mcap_conversion_config,
     load_tabular_data,
     load_video_data,
-)
-from .loader.models import (
-    CompressedImageMappingConfig,
-    CompressedVideoMappingConfig,
-    LogMappingConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,8 +44,6 @@ SUPPORT_WRITER_FORMATS = ["json", "ros2"]
 class McapConverter:
     """Main class for converting tabular and multimedia data to MCAP format."""
 
-    config_path: Path
-    converter_functions_path: Path
     mcap_config: McapConversionConfig
     converter_functions: dict[str, Any]
     shared_jinja2_env: ConverterFunctionJinja2Environment
@@ -54,8 +54,8 @@ class McapConverter:
 
     def __init__(
         self,
-        config_path: Path | McapConversionConfig,
-        converter_functions_path: Path,
+        config_path: Path | None = None,
+        converter_functions_path: Path | None = None,
     ):
         """
         Initialize the MCAP converter.
@@ -64,48 +64,46 @@ class McapConverter:
             config_path: Path to the configuration file or McapConversionConfig object
             converter_functions_path: Path to the converter functions file
         """
-        self.config_path = config_path
-        self.converter_functions_path = converter_functions_path
-
-        # Load configuration
-        if isinstance(config_path, McapConversionConfig):
-            self.mcap_config = config_path
-        else:
-            self.mcap_config = load_mcap_conversion_config(config_path)
-
-        # Load converter functions
-        self.converter_functions = self._load_converter_functions()
-
         # Initialize schema IDs
         self._schema_ids = {}
 
-        # Initialize shared Jinja2 environment
-        self.shared_jinja2_env = ConverterFunctionJinja2Environment()
-        for converter_function in self.converter_functions.values():
-            converter_function.jinja2_env = self.shared_jinja2_env
-            converter_function.init_jinja2_template()
+        if config_path is not None:
+            self.load_config(config_path)
+            logger.info(f"Config: {config_path}")
 
+        self.shared_jinja2_env = ConverterFunctionJinja2Environment()
+        if converter_functions_path is not None:
+            self.load_converter_functions(converter_functions_path)
+            logger.info(f"Converter functions: {converter_functions_path}")
         download_and_cache_all_repos(distro="jazzy")
 
-    def _load_converter_functions(self) -> dict[str, Any]:
-        """Load converter function definitions."""
-        ret_val = {}
-        if self.converter_functions_path.exists():
-            converter_definitions = load_converter_function_definitions(
-                self.converter_functions_path
-            )
+    def load_config(self, config_path: Path) -> None:
+        """Load mapping configuration from YAML file"""
+        self.mcap_config = load_mcap_conversion_config(config_path)
+
+    def load_converter_functions(self, functions_path: Path) -> None:
+        """Load converter function definitions.
+
+        Args:
+            functions_path: Path to the converter functions file
+        """
+
+        self.converter_functions = {}
+        if functions_path.exists():
+            converter_definitions = load_converter_function_definitions(functions_path)
             logger.info(
                 f"Loaded {len(converter_definitions.functions)} converter function definitions"
             )
-            ret_val = {
+            self.converter_functions = {
                 k: ConverterFunction(definition=v)
                 for k, v in converter_definitions.functions.items()
             }
         else:
-            logger.warning(
-                f"Converter functions file {self.converter_functions_path} does not exist"
-            )
-        return ret_val
+            logger.warning(f"Converter functions file {functions_path} does not exist")
+
+        for converter_function in self.converter_functions.values():
+            converter_function.jinja2_env = self.shared_jinja2_env
+            converter_function.init_jinja2_template()
 
     def _clean_string(self, string: str) -> str:
         """Clean a string by removing special characters and replacing spaces with underscores."""
@@ -129,8 +127,6 @@ class McapConverter:
         """
         logger.info(f"Input directory: {input_path}")
         logger.info(f"Output MCAP: {output_path}")
-        logger.info(f"Config: {self.config_path}")
-        logger.info(f"Converter functions: {self.converter_functions_path}")
 
         if self.mcap_config.writer_format not in SUPPORT_WRITER_FORMATS:
             raise ValueError(
@@ -226,6 +222,14 @@ class McapConverter:
             k: self._process_file_mappings(v, input_path) for k, v in mappings.items()
         }
 
+    def _load_dataframe(self, input_file: Path) -> pd.DataFrame:
+        """Load a dataframe from a file."""
+        df = load_tabular_data(input_file)
+        df.columns = df.columns.str.replace("[ .-]", "_", regex=True).str.replace(
+            "[^A-Za-z0-9_]", "", regex=True
+        )
+        return df
+
     def _process_tabular_mappings(
         self,
         mapping_tuples: list,
@@ -242,10 +246,7 @@ class McapConverter:
             unit="file",
         ):
             relative_path = input_file.relative_to(input_path)
-            df = load_tabular_data(input_file)
-            df.columns = df.columns.str.replace("[ .-]", "_", regex=True).str.replace(
-                "[^A-Za-z0-9_]", "", regex=True
-            )
+            df = self._load_dataframe(input_file)
 
             # Apply test mode if enabled
             if test_mode:
@@ -449,3 +450,60 @@ class McapConverter:
                     if len(kv) >= 2
                 }
                 self._converter.writer.add_metadata(str(relative_path), metadata_dict)
+
+    def generate_converter_functions(self, input_path: Path, output_path: Path) -> None:
+        """Generate converter functions."""
+        if self.mcap_config.writer_format == "json":
+            self._converter = JsonConverter()
+        elif self.mcap_config.writer_format == "ros2":
+            self._converter = Ros2Converter()
+
+        conv_func_file = ConverterFunctionFile()
+        conv_func_to_file_pattern_map = {}
+
+        for mappings in self.mcap_config.tabular_mappings:
+            for conv_func in mappings.converter_functions:
+                if conv_func.function_name not in conv_func_file.functions:
+                    if conv_func.schema_name is None:
+                        schema_json = "{}"
+                    else:
+                        schema_json = self._converter.get_schema_template(
+                            conv_func.schema_name
+                        )
+                    conv_func_file.functions[conv_func.function_name] = (
+                        ConverterFunctionDefinition(
+                            schema_name=conv_func.schema_name,
+                            log_time_template="{{ <timestamp_nanosec_column> | int }}",
+                            publish_time_template=None,
+                            available_columns=[],
+                            template=schema_json,
+                        )
+                    )
+                    conv_func_to_file_pattern_map[conv_func.function_name] = []
+                if (
+                    conv_func.schema_name
+                    != conv_func_file.functions[conv_func.function_name].schema_name
+                ):
+                    raise TypeError(
+                        "Converter function returning different schema types"
+                    )
+                conv_func_to_file_pattern_map[conv_func.function_name].append(
+                    mappings.file_pattern
+                )
+
+        for conv_func, file_patterns in conv_func_to_file_pattern_map.items():
+            conv_func_def = conv_func_file.functions[conv_func]
+            for file_pattern in file_patterns:
+                for input_file in input_path.glob(file_pattern):
+                    relative_path = input_file.relative_to(input_path)
+                    df = self._load_dataframe(input_file)
+
+                    conv_func_def.available_columns.append(
+                        f"{relative_path}: {', '.join(df.columns)}"
+                    )
+            logger.info(f"Converter: {conv_func} File patterns: {file_patterns}")
+
+        export_converter_function_definitions(
+            conv_func_file=conv_func_file, path=output_path
+        )
+        logger.info(f"Generating converter functions to {output_path}")

@@ -46,11 +46,43 @@ def convert_tabular_to_mcap(
     )
 
 
+def generate_converter_functions(
+    input_path: Path,
+    config_path: Path,
+    converter_functions_path: Path,
+) -> None:
+    """
+    Generate converter_functions.yaml file based on config.yaml.
+
+    This function analyzes the config.yaml file and generates a converter_functions.yaml
+    file with empty function definitions for each function_name referenced in the config.
+
+    Args:
+        input_path: Path to the input directory containing tabular data files
+        config_path: Path to the config file
+        converter_functions_path: Path to the output converter functions YAML file
+
+    Returns:
+        None
+    """
+    converter = McapConverter(config_path=config_path)
+    converter.generate_converter_functions(
+        input_path=input_path, output_path=converter_functions_path
+    )
+
+
 def main() -> None:
     program_start_time = time.time()
     parser = argparse.ArgumentParser(
         description="Convert tabular data to MCAP format", prog="tabular2mcap"
     )
+
+    # Create subparsers for different commands
+    subparsers = parser.add_subparsers(
+        dest="command", help="Available commands", required=False
+    )
+
+    # Default arguments (for convert command when no subcommand is specified)
     parser.add_argument(
         "-i", "--input", type=str, help="Input directory containing tabular data files"
     )
@@ -75,6 +107,26 @@ def main() -> None:
         help="Test mode: only process the first 5 rows of each CSV file",
     )
 
+    # Subparser for gen command (generate converter_functions.yaml template)
+    generate_parser = subparsers.add_parser(
+        "gen",
+        help="Generate converter_functions.yaml template based on config.yaml",
+    )
+    generate_parser.add_argument(
+        "-i",
+        "--input",
+        type=str,
+        required=True,
+        help="Input directory containing tabular data files",
+    )
+    generate_parser.add_argument("-c", "--config", type=str, help="Config file path")
+    generate_parser.add_argument(
+        "-f",
+        "--functions",
+        type=str,
+        help="Path to output converter functions YAML file",
+    )
+
     args = parser.parse_args()
     # Convert to Path object for easier handling
     input_path = Path(args.input)
@@ -86,34 +138,52 @@ def main() -> None:
         logger.error(f"'{input_path}' is not a directory")
         sys.exit(1)
 
-    config_path = Path(args.config) if args.config else input_path / "config.yaml"
-    if not config_path.exists():
-        logger.error(f"Config file '{config_path}' does not exist")
-        sys.exit(1)
+    # Handle different commands
+    if args.command == "gen":
+        config_path = Path(args.config) if args.config else input_path / "config.yaml"
+        if not config_path.exists():
+            logger.error(f"Config file '{config_path}' does not exist")
+            sys.exit(1)
 
-    if args.output:
-        output_path = Path(args.output)
-        # If output ends with a slash, treat it as a directory and add a default filename
-        if output_path.is_dir() or str(output_path).endswith("/"):
-            output_path = output_path / "output.mcap"
-    else:
-        output_path = input_path / "output.mcap"
+        converter_functions_path = (
+            Path(args.functions)
+            if args.functions
+            else input_path / "generated_converter_functions.yaml"
+        )
+        generate_converter_functions(
+            input_path,
+            config_path,
+            converter_functions_path,
+        )
+    else:  # Default: convert command
+        config_path = Path(args.config) if args.config else input_path / "config.yaml"
+        if not config_path.exists():
+            logger.error(f"Config file '{config_path}' does not exist")
+            sys.exit(1)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+        if args.output:
+            output_path = Path(args.output)
+            # If output ends with a slash, treat it as a directory and add a default filename
+            if output_path.is_dir() or str(output_path).endswith("/"):
+                output_path = output_path / "output.mcap"
+        else:
+            output_path = input_path / "output.mcap"
 
-    converter_functions_path = (
-        Path(args.functions)
-        if args.functions
-        else input_path / "converter_functions.yaml"
-    )
-    convert_tabular_to_mcap(
-        input_path,
-        output_path,
-        config_path,
-        args.topic_prefix,
-        converter_functions_path,
-        args.test_mode,
-    )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        converter_functions_path = (
+            Path(args.functions)
+            if args.functions
+            else input_path / "converter_functions.yaml"
+        )
+        convert_tabular_to_mcap(
+            input_path,
+            output_path,
+            config_path,
+            args.topic_prefix,
+            converter_functions_path,
+            args.test_mode,
+        )
 
     # Calculate and log total program execution time
     program_end_time = time.time()

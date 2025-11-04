@@ -97,12 +97,61 @@ def register_foxglove_schema(writer: McapWriter, schema_name: str) -> int:
     return schema_id
 
 
+def to_template_value(prop_def: dict, col_name: str = "") -> Any:
+    prop_type = prop_def.get("type", "unknown")
+
+    if prop_type == "object" and "properties" in prop_def:
+        return {n: to_template_value(d, n) for n, d in prop_def["properties"].items()}
+    elif prop_type == "array":
+        items = prop_def.get("items", {})
+        count = prop_def.get("minItems", 1)
+        if items.get("type") == "object" and "properties" in items:
+            return [
+                {
+                    n: to_template_value(d, f"{n}_{idx}")
+                    for n, d in items["properties"].items()
+                }
+                for idx in range(count)
+            ]
+        else:
+            return [f"{{{{ <{f'{col_name}_{idx}_column'}> }}}}" for idx in range(count)]
+    else:
+        comment_str = ""
+        filter_str = ""
+        if "oneOf" in prop_def:
+            options = prop_def["oneOf"]
+            comment_str = " # one of " + " or ".join(
+                [f"{option['const']} ({option['title']})" for option in options]
+            )
+        elif prop_type == "integer":
+            filter_str = " | int"
+        elif prop_type == "number":
+            filter_str = " | float"
+        return f"{{{{ <{col_name}_column>{filter_str} }}}}{comment_str}"
+
+
+def json_schema_to_template(schema_json_str: str | bytes) -> dict:
+    """Convert schema JSON to template dict with only properties."""
+    json_data = json.loads(
+        schema_json_str.decode("utf-8")
+        if isinstance(schema_json_str, bytes)
+        else schema_json_str
+    )
+    if "properties" not in json_data:
+        return {}
+
+    result = {}
+    for prop_name, prop_def in json_data["properties"].items():
+        result[prop_name] = to_template_value(prop_def, prop_name)
+    return result
+
+
 class JsonConverter(ConverterBase):
     """JSON format converter that wraps JSON-specific MCAP writer operations."""
 
-    _writer: McapWriter
+    _writer: McapWriter | None
 
-    def __init__(self, writer: McapWriter):
+    def __init__(self, writer: McapWriter | None = None):
         """Initialize the JSON converter with a writer instance.
 
         Args:
@@ -247,4 +296,23 @@ class JsonConverter(ConverterBase):
                 data=json.dumps(msg).encode("utf-8"),
                 log_time=converted_row.log_time_ns,
                 publish_time=converted_row.publish_time_ns,
+            )
+
+    def get_schema_template(self, schema_name: str) -> str:
+        """Get the schema template for a given schema name.
+
+        Args:
+            schema_name: Name of the schema
+
+        Returns:
+            Schema template
+        """
+        if schema_name.startswith("foxglove."):
+            # Get schema data
+            schema_data = get_foxglove_jsonschema(schema_name.removeprefix("foxglove."))
+            data = json_schema_to_template(schema_data)
+            return json.dumps(data, indent=2)
+        else:
+            raise ValueError(
+                f"Unknown schema: {schema_name}. Must be prefixed with 'foxglove.' or none."
             )
