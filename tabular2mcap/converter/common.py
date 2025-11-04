@@ -134,5 +134,5 @@ def _to_json_string(obj: Any, indent: int, current_indent: int = 0) -> str:
 
 
 def jinja2_json_dump(data: dict, indent: int = 2) -> str:
-    """Dump a dictionary to a JSON string with all values properly quoted."""
+    """Dump a dictionary to a JSON string with jinja2 template values properly quoted (eg, int or float are not quoted)."""
     return _to_json_string(data, indent)
