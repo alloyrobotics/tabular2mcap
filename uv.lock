@@ -1862,7 +1862,7 @@ wheels = [
 
 [[package]]
 name = "tabular2mcap"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "av" },
