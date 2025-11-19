@@ -19,7 +19,12 @@ ALL_WRITER_FORMATS = ["json", "ros2"]
 logger = logging.getLogger(__name__)
 
 
-def setup_mcap_conversion(mcap_name: str, writer_format: str):
+def setup_mcap_conversion(
+    mcap_name: str,
+    writer_format: str,
+    config_name: str = "config.yaml",
+    best_effort: bool = False,
+):
     input_path = DATA_PATH / mcap_name
     output_path = TEST_OUTPUT_PATH / writer_format / f"{mcap_name}.mcap"
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -28,12 +33,13 @@ def setup_mcap_conversion(mcap_name: str, writer_format: str):
     convert_tabular_to_mcap(
         input_path=input_path,
         output_path=output_path,
-        config_path=input_path / writer_format / "config.yaml",
+        config_path=input_path / writer_format / config_name,
         topic_prefix="",
         converter_functions_path=input_path
         / writer_format
         / "converter_functions.yaml",
         test_mode=False,
+        best_effort=best_effort,
     )
 
 
@@ -57,7 +63,7 @@ def mcap_files():
 @pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
 def test_mcap_conversion(mcap_name: str, writer_format: str):
     """Test mcap conversion for all mcap files and writer formats."""
-    setup_mcap_conversion(mcap_name, writer_format)
+    setup_mcap_conversion(mcap_name, writer_format, best_effort=True)
     mcap_file = TEST_OUTPUT_PATH / writer_format / f"{mcap_name}.mcap"
     ref_folder = DATA_PATH / f"{mcap_name}"
     ref_mcap_file = ref_folder / writer_format / f"{mcap_name}.mcap"
@@ -132,7 +138,7 @@ def test_generate_converter_functions(mcap_name: str, writer_format: str):
 
     generate_converter_functions(
         input_path=input_path,
-        config_path=input_path / writer_format / "config.yaml",
+        config_path=input_path / writer_format / "config_gen.yaml",
         converter_functions_path=output_path,
     )
 
@@ -143,3 +149,16 @@ def test_generate_converter_functions(mcap_name: str, writer_format: str):
     with open(ref_output_path) as ref_f:
         ref_content = ref_f.read()
     assert output_content == ref_content, "Converter functions mismatch"
+
+
+@pytest.mark.parametrize("mcap_name", ["alloy"])
+@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+def test_not_best_effort_flag(mcap_name: str, writer_format: str):
+    """Test that best_effort flag allows conversion to continue despite errors."""
+    # Test: Without best_effort flag, should raise ValueError
+    with pytest.raises(ValueError, match="Unknown converter function"):
+        setup_mcap_conversion(
+            mcap_name=mcap_name,
+            writer_format=writer_format,
+            best_effort=False,
+        )

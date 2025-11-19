@@ -116,6 +116,7 @@ class McapConverter:
         output_path: Path,
         topic_prefix: str = "",
         test_mode: bool = False,
+        best_effort: bool = False,
     ) -> None:
         """
         Convert tabular and multimedia data to MCAP format.
@@ -125,6 +126,7 @@ class McapConverter:
             output_path: Path to the output MCAP file
             topic_prefix: Prefix for topic names
             test_mode: If True, limits data processing for testing
+            best_effort: If True, continues converting even if errors occur (logs errors)
         """
         logger.info(f"Input directory: {input_path}")
         logger.info(f"Output MCAP: {output_path}")
@@ -162,13 +164,19 @@ class McapConverter:
 
             # Process all data types
             self._process_tabular_mappings(
-                mapping_tuples["tabular"], input_path, topic_prefix, test_mode
+                mapping_tuples["tabular"],
+                input_path,
+                topic_prefix,
+                test_mode,
+                best_effort,
             )
             self._process_other_mappings(
-                mapping_tuples["other"], input_path, topic_prefix
+                mapping_tuples["other"], input_path, topic_prefix, best_effort
             )
-            self._process_attachments(mapping_tuples["attachments"], input_path)
-            self._process_metadata(mapping_tuples["metadata"], input_path)
+            self._process_attachments(
+                mapping_tuples["attachments"], input_path, best_effort
+            )
+            self._process_metadata(mapping_tuples["metadata"], input_path, best_effort)
 
             # Finish writing
             print("\n" + "=" * 60)
@@ -247,6 +255,7 @@ class McapConverter:
         input_path: Path,
         topic_prefix: str = "",
         test_mode: bool = False,
+        best_effort: bool = False,
     ):
         """Process tabular data mappings."""
 
@@ -256,86 +265,102 @@ class McapConverter:
             leave=False,
             unit="file",
         ):
-            relative_path = input_file.relative_to(input_path)
-            df = self._load_dataframe(input_file)
+            try:
+                relative_path = input_file.relative_to(input_path)
+                df = self._load_dataframe(input_file)
 
-            # Apply test mode if enabled
-            if test_mode:
-                original_rows = len(df)
-                df = df.head(5)
-                logger.debug(
-                    f"Converting {relative_path} with {len(df)} rows (test mode: limited from {original_rows} rows)"
-                )
-            else:
-                logger.debug(f"Converting {relative_path} with {len(df)} rows")
-
-            for converter_function in file_mapping.converter_functions:
-                logger.debug(
-                    f"Processing converter function: {converter_function.function_name}"
-                )
-
-                # Get converter function definition
-                if converter_function.function_name in self.converter_functions:
-                    converter_def = self.converter_functions[
-                        converter_function.function_name
-                    ]
-
-                    # Get relative path without extension
-                    relative_path_no_ext = self._clean_string(str(relative_path))
-                    topic_name = f"{topic_prefix}{relative_path_no_ext}/{converter_function.topic_suffix}"
-
-                    # register schema
-                    if converter_function.schema_name is None:
-                        if self.mcap_config.writer_format == "ros2":
-                            schema_name = Ros2Converter.sanitize_schema_name(topic_name)
-                        else:
-                            schema_name = f"table.{topic_name.replace('/', '.')}"
-                        schema_id, schema_keys = (
-                            self._converter.register_generic_schema(
-                                df=df,
-                                schema_name=schema_name,
-                                exclude_keys=converter_function.exclude_columns or [],
-                            )
-                        )
-                        convert_row = generate_generic_converter_func(
-                            schema_keys=schema_keys,
-                            converter_func=converter_def.convert_row,
-                        )
-                        self._schema_ids[schema_name] = schema_id
-                    elif converter_function.schema_name in self._schema_ids:
-                        schema_id = self._schema_ids[converter_function.schema_name]
-                        convert_row = converter_def.convert_row
-                    else:
-                        schema_id = self._converter.register_schema(
-                            schema_name=converter_function.schema_name,
-                        )
-                        self._schema_ids[converter_function.schema_name] = schema_id
-                        convert_row = converter_def.convert_row
-
-                    # write messages
-                    if schema_id is not None:
-
-                        def convert_row_iterator() -> Iterable[tuple[int, dict]]:
-                            for idx, row in df.iterrows():  # noqa: B023
-                                yield idx, convert_row(row)  # noqa: B023
-
-                        self._converter.write_messages_from_iterator(
-                            iterator=convert_row_iterator(),
-                            topic_name=topic_name,
-                            schema_id=schema_id,
-                            data_length=len(df),
-                            unit="msg",
-                        )
-                else:
-                    raise ValueError(
-                        f"Unknown converter function: {converter_function.function_name}. Available functions: {list(self.converter_functions.keys())}"
+                # Apply test mode if enabled
+                if test_mode:
+                    original_rows = len(df)
+                    df = df.head(5)
+                    logger.debug(
+                        f"Converting {relative_path} with {len(df)} rows (test mode: limited from {original_rows} rows)"
                     )
+                else:
+                    logger.debug(f"Converting {relative_path} with {len(df)} rows")
+
+                for converter_function in file_mapping.converter_functions:
+                    logger.debug(
+                        f"Processing converter function: {converter_function.function_name}"
+                    )
+
+                    # Get converter function definition
+                    if converter_function.function_name in self.converter_functions:
+                        converter_def = self.converter_functions[
+                            converter_function.function_name
+                        ]
+
+                        # Get relative path without extension
+                        relative_path_no_ext = self._clean_string(str(relative_path))
+                        topic_name = f"{topic_prefix}{relative_path_no_ext}/{converter_function.topic_suffix}"
+
+                        # try to convert first row to check if the converter function is valid
+                        # if not, this will raise an exception. if yes, we can proceed with the conversion.
+                        converter_def.convert_row(df.iloc[0])
+
+                        # register schema
+                        if converter_function.schema_name is None:
+                            if self.mcap_config.writer_format == "ros2":
+                                schema_name = Ros2Converter.sanitize_schema_name(
+                                    topic_name
+                                )
+                            else:
+                                schema_name = f"table.{topic_name.replace('/', '.')}"
+                            schema_id, schema_keys = (
+                                self._converter.register_generic_schema(
+                                    df=df,
+                                    schema_name=schema_name,
+                                    exclude_keys=converter_function.exclude_columns
+                                    or [],
+                                )
+                            )
+                            convert_row = generate_generic_converter_func(
+                                schema_keys=schema_keys,
+                                converter_func=converter_def.convert_row,
+                            )
+                            self._schema_ids[schema_name] = schema_id
+                        elif converter_function.schema_name in self._schema_ids:
+                            schema_id = self._schema_ids[converter_function.schema_name]
+                            convert_row = converter_def.convert_row
+                        else:
+                            convert_row = converter_def.convert_row
+                            schema_id = self._converter.register_schema(
+                                schema_name=converter_function.schema_name,
+                            )
+                            self._schema_ids[converter_function.schema_name] = schema_id
+
+                        # write messages
+                        if schema_id is not None:
+
+                            def convert_row_iterator() -> Iterable[tuple[int, dict]]:
+                                for idx, row in df.iterrows():  # noqa: B023
+                                    yield idx, convert_row(row)  # noqa: B023
+
+                            self._converter.write_messages_from_iterator(
+                                iterator=convert_row_iterator(),
+                                topic_name=topic_name,
+                                schema_id=schema_id,
+                                data_length=len(df),
+                                unit="msg",
+                            )
+                    else:
+                        raise ValueError(
+                            f"Unknown converter function: {converter_function.function_name}. Available functions: {list(self.converter_functions.keys())}"
+                        )
+            except Exception as e:
+                if best_effort:
+                    logger.error(
+                        f"Error processing tabular file {input_file.relative_to(input_path)}: {e}"
+                    )
+                else:
+                    raise
 
     def _process_other_mappings(
         self,
         mapping_tuples: list,
         input_path: Path,
         topic_prefix: str = "",
+        best_effort: bool = False,
     ):
         """Process other mappings (images, videos, etc.)."""
 
@@ -345,77 +370,89 @@ class McapConverter:
             leave=False,
             unit="file",
         ):
-            relative_path = input_file.relative_to(input_path)
-            logger.debug(
-                f"Processing other mapping: {other_mapping.type} {relative_path}"
-            )
-
-            relative_path_no_ext = self._clean_string(
-                str(relative_path.with_suffix(""))
-            )
-            topic_name_prefix = f"{topic_prefix}{relative_path_no_ext}/"
-
-            # Get or register schema
-            schema_name = other_mapping.schema_name(self.mcap_config.writer_format)
-            if schema_name in self._schema_ids:
-                schema_id = self._schema_ids[schema_name]
-            else:
-                schema_id = self._converter.register_schema(schema_name=schema_name)
-                self._schema_ids[schema_name] = schema_id
-
-            if isinstance(
-                other_mapping,
-                (CompressedImageMappingConfig, CompressedVideoMappingConfig),
-            ):
-                video_frames, video_properties = load_video_data(input_file)
+            try:
+                relative_path = input_file.relative_to(input_path)
                 logger.debug(
-                    f"Loaded video data from {input_file}: {len(video_frames)} frames. Video properties: {video_properties}"
+                    f"Processing other mapping: {other_mapping.type} {relative_path}"
                 )
 
-                # Create frame iterator based on type
-                if isinstance(other_mapping, CompressedImageMappingConfig):
-                    frame_iterator = compressed_image_message_iterator
-                else:  # CompressedVideoMappingConfig
-                    frame_iterator = compressed_video_message_iterator
+                relative_path_no_ext = self._clean_string(
+                    str(relative_path.with_suffix(""))
+                )
+                topic_name_prefix = f"{topic_prefix}{relative_path_no_ext}/"
 
-                self._converter.write_messages_from_iterator(
-                    iterator=enumerate(
-                        frame_iterator(
-                            video_frames=video_frames,
-                            fps=video_properties["fps"],
-                            format=other_mapping.format,
-                            frame_id=other_mapping.frame_id,
-                        )
-                    ),
-                    topic_name=f"{topic_name_prefix}{other_mapping.topic_suffix}",
-                    schema_id=schema_id,
-                    data_length=len(video_frames),
-                    unit="fr",
-                )
-            elif isinstance(other_mapping, LogMappingConfig):
-                log_converter = LogConverter(
-                    log_path=input_file,
-                    format_template=other_mapping.format_template,
-                    writer_format=self.mcap_config.writer_format,
-                    zero_first_timestamp=True,
-                    name=relative_path_no_ext,
-                    datetime_format=other_mapping.datetime_format,
-                )
-                self._converter.write_messages_from_iterator(
-                    iterator=enumerate(log_converter.log_iter()),
-                    topic_name=(
-                        "rosout"
-                        if other_mapping.topic_suffix is None
-                        else f"{topic_name_prefix}{other_mapping.topic_suffix}"
-                    ),
-                    schema_id=schema_id,
-                    data_length=None,
-                    unit="fr",
-                )
-            else:
-                raise ValueError(f"Unknown other mapping type: {other_mapping.type}")
+                # Get or register schema
+                schema_name = other_mapping.schema_name(self.mcap_config.writer_format)
+                if schema_name in self._schema_ids:
+                    schema_id = self._schema_ids[schema_name]
+                else:
+                    schema_id = self._converter.register_schema(schema_name=schema_name)
+                    self._schema_ids[schema_name] = schema_id
 
-    def _process_attachments(self, mapping_tuples: list, input_path: Path):
+                if isinstance(
+                    other_mapping,
+                    (CompressedImageMappingConfig, CompressedVideoMappingConfig),
+                ):
+                    video_frames, video_properties = load_video_data(input_file)
+                    logger.debug(
+                        f"Loaded video data from {input_file}: {len(video_frames)} frames. Video properties: {video_properties}"
+                    )
+
+                    # Create frame iterator based on type
+                    if isinstance(other_mapping, CompressedImageMappingConfig):
+                        frame_iterator = compressed_image_message_iterator
+                    else:  # CompressedVideoMappingConfig
+                        frame_iterator = compressed_video_message_iterator
+
+                    self._converter.write_messages_from_iterator(
+                        iterator=enumerate(
+                            frame_iterator(
+                                video_frames=video_frames,
+                                fps=video_properties["fps"],
+                                format=other_mapping.format,
+                                frame_id=other_mapping.frame_id,
+                            )
+                        ),
+                        topic_name=f"{topic_name_prefix}{other_mapping.topic_suffix}",
+                        schema_id=schema_id,
+                        data_length=len(video_frames),
+                        unit="fr",
+                    )
+                elif isinstance(other_mapping, LogMappingConfig):
+                    log_converter = LogConverter(
+                        log_path=input_file,
+                        format_template=other_mapping.format_template,
+                        writer_format=self.mcap_config.writer_format,
+                        zero_first_timestamp=True,
+                        name=relative_path_no_ext,
+                        datetime_format=other_mapping.datetime_format,
+                    )
+                    self._converter.write_messages_from_iterator(
+                        iterator=enumerate(log_converter.log_iter()),
+                        topic_name=(
+                            "rosout"
+                            if other_mapping.topic_suffix is None
+                            else f"{topic_name_prefix}{other_mapping.topic_suffix}"
+                        ),
+                        schema_id=schema_id,
+                        data_length=None,
+                        unit="fr",
+                    )
+                else:
+                    raise ValueError(
+                        f"Unknown other mapping type: {other_mapping.type}"
+                    )
+            except Exception as e:
+                if best_effort:
+                    logger.error(
+                        f"Error processing other mapping {input_file.relative_to(input_path)}: {e}"
+                    )
+                else:
+                    raise
+
+    def _process_attachments(
+        self, mapping_tuples: list, input_path: Path, best_effort: bool = False
+    ):
         """Process attachment data."""
 
         for _attachment, input_file in tqdm(
@@ -424,23 +461,39 @@ class McapConverter:
             leave=False,
             unit="file",
         ):
-            relative_path = input_file.relative_to(input_path)
-            with open(input_file, "rb") as attachment_file:
-                data = attachment_file.read()
-                stat = input_file.stat()
-                # Convert file creation/modification time to nanoseconds (integer)
-                # Use st_birthtime (creation) if available, otherwise st_ctime (change time)
-                create_time_ns = (
-                    int(stat.st_birthtime * 1_000_000_000)
-                    if hasattr(stat, "st_birthtime")
-                    else int(stat.st_ctime * 1_000_000_000)
-                )
-                log_time_ns = int(stat.st_mtime * 1_000_000_000)  # modification time
-                self._converter.writer.add_attachment(
-                    create_time_ns, log_time_ns, str(relative_path), "text/plain", data
-                )
+            try:
+                relative_path = input_file.relative_to(input_path)
+                with open(input_file, "rb") as attachment_file:
+                    data = attachment_file.read()
+                    stat = input_file.stat()
+                    # Convert file creation/modification time to nanoseconds (integer)
+                    # Use st_birthtime (creation) if available, otherwise st_ctime (change time)
+                    create_time_ns = (
+                        int(stat.st_birthtime * 1_000_000_000)
+                        if hasattr(stat, "st_birthtime")
+                        else int(stat.st_ctime * 1_000_000_000)
+                    )
+                    log_time_ns = int(
+                        stat.st_mtime * 1_000_000_000
+                    )  # modification time
+                    self._converter.writer.add_attachment(
+                        create_time_ns,
+                        log_time_ns,
+                        str(relative_path),
+                        "text/plain",
+                        data,
+                    )
+            except Exception as e:
+                if best_effort:
+                    logger.error(
+                        f"Error processing attachment {input_file.relative_to(input_path)}: {e}"
+                    )
+                else:
+                    raise
 
-    def _process_metadata(self, mapping_tuples: list, input_path: Path):
+    def _process_metadata(
+        self, mapping_tuples: list, input_path: Path, best_effort: bool = False
+    ):
         """Process metadata."""
 
         for metadata, input_file in tqdm(
@@ -449,18 +502,28 @@ class McapConverter:
             leave=False,
             unit="file",
         ):
-            relative_path = input_file.relative_to(input_path)
-            with open(input_file) as metadata_file:
-                key_value_list = [
-                    line.strip().split(metadata.separator)
-                    for line in metadata_file.readlines()
-                ]
-                metadata_dict: dict[str, str] = {
-                    kv[0].strip(): kv[1].strip()
-                    for kv in key_value_list
-                    if len(kv) >= 2
-                }
-                self._converter.writer.add_metadata(str(relative_path), metadata_dict)
+            try:
+                relative_path = input_file.relative_to(input_path)
+                with open(input_file) as metadata_file:
+                    key_value_list = [
+                        line.strip().split(metadata.separator)
+                        for line in metadata_file.readlines()
+                    ]
+                    metadata_dict: dict[str, str] = {
+                        kv[0].strip(): kv[1].strip()
+                        for kv in key_value_list
+                        if len(kv) >= 2
+                    }
+                    self._converter.writer.add_metadata(
+                        str(relative_path), metadata_dict
+                    )
+            except Exception as e:
+                if best_effort:
+                    logger.error(
+                        f"Error processing metadata {input_file.relative_to(input_path)}: {e}"
+                    )
+                else:
+                    raise
 
     def generate_converter_functions(self, input_path: Path, output_path: Path) -> None:
         """Generate converter functions."""
