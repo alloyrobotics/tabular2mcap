@@ -117,6 +117,7 @@ class McapConverter:
         topic_prefix: str = "",
         test_mode: bool = False,
         best_effort: bool = False,
+        strip_file_suffix: bool = False,
     ) -> None:
         """
         Convert tabular and multimedia data to MCAP format.
@@ -127,6 +128,7 @@ class McapConverter:
             topic_prefix: Prefix for topic names
             test_mode: If True, limits data processing for testing
             best_effort: If True, continues converting even if errors occur (logs errors)
+            strip_file_suffix: If True, removes file extensions from topic names
         """
         logger.info(f"Input directory: {input_path}")
         logger.info(f"Output MCAP: {output_path}")
@@ -169,6 +171,7 @@ class McapConverter:
                 topic_prefix,
                 test_mode,
                 best_effort,
+                strip_file_suffix,
             )
             self._process_other_mappings(
                 mapping_tuples["other"], input_path, topic_prefix, best_effort
@@ -256,6 +259,7 @@ class McapConverter:
         topic_prefix: str = "",
         test_mode: bool = False,
         best_effort: bool = False,
+        strip_file_suffix: bool = False,
     ):
         """Process tabular data mappings."""
 
@@ -290,8 +294,13 @@ class McapConverter:
                             converter_function.function_name
                         ]
 
-                        # Get relative path without extension
-                        relative_path_no_ext = self._clean_string(str(relative_path))
+                        # Get relative path, optionally without file extension
+                        path_str = (
+                            str(relative_path.with_suffix(""))
+                            if strip_file_suffix
+                            else str(relative_path)
+                        )
+                        relative_path_no_ext = self._clean_string(path_str)
                         topic_name = f"{topic_prefix}{relative_path_no_ext}/{converter_function.topic_suffix}"
 
                         # try to convert first row to check if the converter function is valid

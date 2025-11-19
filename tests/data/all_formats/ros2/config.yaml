@@ -1,0 +1,35 @@
+# Mapping configuration for tabular data to MCAP conversion
+# This file defines how different CSV files should be processed and converted
+
+writer_format: "ros2"  # Output format: ros1, ros2, json, or protobuf. Other formats are not supported yet.
+
+# Tabular data mappings
+tabular_mappings:
+  - file_pattern: "location.csv"
+    converter_functions:
+      - function_name: "row_to_location_fix"
+        schema_name: "sensor_msgs/msg/NavSatFix"
+        topic_suffix: "NavSatFix"
+      - function_name: "row_to_transform"
+        schema_name: "geometry_msgs/msg/TransformStamped"
+        topic_suffix: "FrameTransforms"
+
+  - file_pattern: "sensor.csv"
+    converter_functions:
+      - function_name: "row_to_pressure1"
+        schema_name: "sensor_msgs/msg/FluidPressure"
+        topic_suffix: "Pressure1"
+      - function_name: "row_to_pressure2"
+        schema_name: "std_msgs/msg/Float32"
+        topic_suffix: "Pressure2"
+      - function_name: "row_to_sensor3"
+        schema_name: "sensor_msgs/msg/Temperature"
+        topic_suffix: "Sensor3"
+      - function_name: "row_to_sensor4"
+        schema_name: "sensor_msgs/msg/RelativeHumidity"
+        topic_suffix: "Sensor4"
+      - function_name: "row_to_timestamp"
+        schema_name: null
+        topic_suffix: "Data"
+        exclude_columns:
+        - "timestamp_sec"

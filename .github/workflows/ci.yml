@@ -55,7 +55,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: uv sync --all-groups --all-extras
 
       - name: Run tests with coverage
         run: uv run pytest --cov=tabular2mcap --cov-report=xml --cov-report=term -v
