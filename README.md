@@ -3,7 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-2d62ff?style=flat&labelColor=f8f9fa&color=2d62ff)](https://alloyrobotics.github.io/tabular2mcap/)
 [![Supported by Alloy](https://img.shields.io/badge/Supported%20by-Alloy-2d62ff?style=flat&labelColor=f8f9fa&color=2d62ff)](https://usealloy.ai)
 
-Convert tabular data (CSV, Parquet) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.
+Convert tabular data (CSV, Parquet, Excel, and more) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.
 
 > **Please ⭐ if this helps you today!**
 
@@ -18,7 +18,17 @@ Convert tabular data (CSV, Parquet) to MCAP format with support for ROS2 and JSO
 ### Installation
 
 ```bash
+# Basic installation (CSV, TSV, JSON, Pickle)
 pip install tabular2mcap
+
+# With optional formats
+pip install tabular2mcap[parquet]      # Parquet files
+pip install tabular2mcap[feather]      # Feather files
+pip install tabular2mcap[orc]          # ORC files
+pip install tabular2mcap[excel]        # Excel files (.xlsx)
+pip install tabular2mcap[excel-legacy] # Excel files (.xls)
+pip install tabular2mcap[xml]          # XML files
+pip install tabular2mcap[all-formats]  # All formats
 ```
 
 ### Basic Usage

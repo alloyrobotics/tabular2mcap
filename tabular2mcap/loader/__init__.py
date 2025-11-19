@@ -21,12 +21,110 @@ from tabular2mcap.loader.models import (
 logger = logging.getLogger(__name__)
 
 
-def load_tabular_data(file_path: Path) -> pd.DataFrame:
-    """Load and preprocess tabular data"""
-    if file_path.suffix == ".parquet":
-        df = pd.read_parquet(file_path)
+def load_tabular_data(file_path: Path, suffix: str | None = None) -> pd.DataFrame:
+    """Load and preprocess tabular data from various formats.
+
+    Supported formats:
+    - CSV/TSV: .csv, .tsv, .txt (comma or tab delimited) - always available
+    - Parquet: .parquet (requires: pip install tabular2mcap[parquet])
+    - Feather: .feather (requires: pip install tabular2mcap[feather])
+    - JSON: .json, .jsonl - always available
+    - Excel: .xlsx, .xls (requires: pip install tabular2mcap[excel])
+    - ORC: .orc (requires: pip install tabular2mcap[orc])
+    - XML: .xml (requires: pip install tabular2mcap[xml])
+    - Pickle: .pkl, .pickle - always available
+
+    For all formats: pip install tabular2mcap[all-formats]
+
+    Args:
+        file_path: Path to the tabular data file
+        suffix: Suffix of the file to load. If not provided, it will be inferred from the file extension.
+
+    Returns:
+        DataFrame containing the loaded data
+
+    Raises:
+        ValueError: If the file format is not supported
+        ImportError: If required optional dependencies are missing
+    """
+    suffix = suffix or file_path.suffix.lower()
+
+    # CSV/TSV formats
+    if suffix in {".csv", ".tsv", ".txt"}:
+        # Try to detect delimiter for TSV files
+        delimiter = "\t" if suffix == ".tsv" else ","
+        df = pd.read_csv(file_path, delimiter=delimiter)
+    # Parquet format
+    elif suffix == ".parquet":
+        try:
+            df = pd.read_parquet(file_path)
+        except (ImportError, ValueError) as e:
+            if "pyarrow" in str(e).lower():
+                raise ImportError(
+                    "Reading Parquet files requires 'pyarrow'. "
+                    "Install with: pip install tabular2mcap[parquet]"
+                ) from e
+            raise
+    # Feather format
+    elif suffix == ".feather":
+        try:
+            df = pd.read_feather(file_path)
+        except (ImportError, ValueError) as e:
+            if "pyarrow" in str(e).lower():
+                raise ImportError(
+                    "Reading Feather files requires 'pyarrow'. "
+                    "Install with: pip install tabular2mcap[feather]"
+                ) from e
+            raise
+    # JSON formats
+    elif suffix in {".json", ".jsonl"}:
+        if suffix == ".jsonl":
+            # JSON Lines format
+            df = pd.read_json(file_path, lines=True, convert_dates=False)
+        else:
+            df = pd.read_json(file_path, convert_dates=False)
+    # Excel formats
+    elif suffix in {".xlsx", ".xls"}:
+        try:
+            df = pd.read_excel(file_path)
+        except (ImportError, ValueError) as e:
+            # ValueError can occur when required library is missing
+            if "openpyxl" in str(e).lower() or "xlrd" in str(e).lower():
+                raise ImportError(
+                    "Reading Excel files requires 'openpyxl' (for .xlsx) or 'xlrd' (for .xls). "
+                    "Install with: pip install tabular2mcap[excel] or pip install tabular2mcap[excel-legacy]"
+                ) from e
+            raise
+    # ORC format
+    elif suffix == ".orc":
+        try:
+            df = pd.read_orc(file_path)
+        except (ImportError, ValueError) as e:
+            if "pyarrow" in str(e).lower():
+                raise ImportError(
+                    "Reading ORC files requires 'pyarrow'. "
+                    "Install with: pip install tabular2mcap[orc]"
+                ) from e
+            raise
+    # XML format
+    elif suffix == ".xml":
+        try:
+            df = pd.read_xml(file_path)
+        except (ImportError, ValueError) as e:
+            if "lxml" in str(e).lower():
+                raise ImportError(
+                    "Reading XML files requires 'lxml'. "
+                    "Install with: pip install tabular2mcap[xml]"
+                ) from e
+            raise
+    # Pickle formats
+    elif suffix in {".pkl", ".pickle"}:
+        df = pd.read_pickle(file_path)
     else:
+        # Default to CSV for unknown extensions
+        logger.warning(f"Unknown file extension '{suffix}'. Attempting to read as CSV.")
         df = pd.read_csv(file_path)
+
     return df
 
 
