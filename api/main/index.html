@@ -660,7 +660,7 @@
 
 
 <h2 id="tabular2mcap.convert_tabular_to_mcap" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">tabular2mcap</span><span class="o">.</span><span class="n">convert_tabular_to_mcap</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">topic_prefix</span><span class="p">,</span> <span class="n">converter_functions_path</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">best_effort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">tabular2mcap</span><span class="o">.</span><span class="n">convert_tabular_to_mcap</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">topic_prefix</span><span class="p">,</span> <span class="n">converter_functions_path</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">best_effort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strip_file_suffix</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 </h2>
 
@@ -789,6 +789,22 @@ For more control, use McapConverter directly.</p>
             <td>
               <div class="doc-md-description">
                 <p>Continue converting even if errors occur (logs errors but doesn't stop)</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>strip_file_suffix</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, removes file extensions from topic names</p>
               </div>
             </td>
             <td>
@@ -932,7 +948,7 @@ For more control, use McapConverter directly.</p>
 
 
 <h3 id="tabular2mcap.McapConverter.convert" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">convert</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">topic_prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">best_effort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">convert</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">topic_prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">best_effort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strip_file_suffix</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 </h3>
 
@@ -1027,6 +1043,22 @@ For more control, use McapConverter directly.</p>
             <td>
               <div class="doc-md-description">
                 <p>If True, continues converting even if errors occur (logs errors)</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>strip_file_suffix</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, removes file extensions from topic names</p>
               </div>
             </td>
             <td>

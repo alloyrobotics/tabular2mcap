@@ -728,7 +728,7 @@
 <h1 id="tabular2mcap">Tabular2MCAP</h1>
 <p><a href="https://alloyrobotics.github.io/tabular2mcap/"><img alt="Documentation" src="https://img.shields.io/badge/docs-mkdocs-2d62ff?style=flat&amp;labelColor=f8f9fa&amp;color=2d62ff" /></a>
 <a href="https://usealloy.ai"><img alt="Supported by Alloy" src="https://img.shields.io/badge/Supported%20by-Alloy-2d62ff?style=flat&amp;labelColor=f8f9fa&amp;color=2d62ff" /></a></p>
-<p>Convert tabular data (CSV, Parquet) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.</p>
+<p>Convert tabular data (CSV, Parquet, Excel, and more) to MCAP format with support for ROS2 and JSON schemas, enabling seamless integration with robotics workflows, data visualization in Foxglove Studio, and playback of sensor and navigation data.</p>
 <blockquote>
 <p><strong>Please ⭐ if this helps you today!</strong></p>
 </blockquote>
@@ -740,7 +740,17 @@
 </ul>
 <h2 id="quick-start">Quick Start</h2>
 <h3 id="installation">Installation</h3>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap
+<div class="highlight"><pre><span></span><code><span class="c1"># Basic installation (CSV, TSV, JSON, Pickle)</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap
+
+<span class="c1"># With optional formats</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>parquet<span class="o">]</span><span class="w">      </span><span class="c1"># Parquet files</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>feather<span class="o">]</span><span class="w">      </span><span class="c1"># Feather files</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>orc<span class="o">]</span><span class="w">          </span><span class="c1"># ORC files</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>excel<span class="o">]</span><span class="w">        </span><span class="c1"># Excel files (.xlsx)</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>excel-legacy<span class="o">]</span><span class="w"> </span><span class="c1"># Excel files (.xls)</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>xml<span class="o">]</span><span class="w">          </span><span class="c1"># XML files</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>all-formats<span class="o">]</span><span class="w">  </span><span class="c1"># All formats</span>
 </code></pre></div>
 <h3 id="basic-usage">Basic Usage</h3>
 <div class="highlight"><pre><span></span><code>tabular2mcap<span class="w"> </span><span class="se">\</span>
