@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from mcap.writer import Writer as McapWriter
 from mcap_ros2.writer import Writer as McapRos2Writer
@@ -228,7 +229,17 @@ class McapConverter:
         df.columns = df.columns.str.replace("[ .-]", "_", regex=True).str.replace(
             "[^A-Za-z0-9_]", "", regex=True
         )
-        return df
+        # Clean for JSON encoding: replace inf/-inf with max float32 (safe for squaring), NaN with None
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        if len(numeric_cols) > 0:
+            max_float, min_float = (
+                np.finfo(np.float32).max,
+                np.finfo(np.float32).min,
+            )  # 3.4e+38, safe when squared
+            df[numeric_cols] = df[numeric_cols].replace(
+                [np.inf, -np.inf], [max_float, min_float]
+            )
+        return df.where(pd.notna(df), None)
 
     def _process_tabular_mappings(
         self,
