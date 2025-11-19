@@ -65,3 +65,10 @@ functions:
           }
         ]
       }
+  row_to_invalid_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (nonexistent_column * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'

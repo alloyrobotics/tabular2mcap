@@ -13,9 +13,6 @@ tabular_mappings:
       - function_name: "row_to_transform"
         schema_name: "foxglove.FrameTransforms"
         topic_suffix: "FrameTransforms"
-      - function_name: "nonexistent_function"
-        schema_name: null
-        topic_suffix: "Nonexistent"
 
   - file_pattern: "sensor.csv"
     converter_functions:
@@ -25,9 +22,6 @@ tabular_mappings:
         exclude_columns:
         # Exclude timestamp_sec; all other columns (pressure1, pressure2, sensor3, sensor4) are included
         - "timestamp_sec"
-      - function_name: "row_to_invalid_timestamp"
-        schema_name: null
-        topic_suffix: "InvalidTimestamp"
 
 attachments:
   - file_pattern: '**/alloy_website.txt'

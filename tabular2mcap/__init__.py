@@ -17,6 +17,7 @@ def convert_tabular_to_mcap(
     topic_prefix: str,
     converter_functions_path: Path,
     test_mode: bool = False,
+    best_effort: bool = False,
 ) -> None:
     """
     Convert tabular and multimedia data to MCAP format.
@@ -31,6 +32,7 @@ def convert_tabular_to_mcap(
         topic_prefix: Optional prefix to prepend to all topic names in the generated MCAP file
         converter_functions_path: Path to the converter functions YAML file
         test_mode: Test mode: only process the first 5 rows of each CSV file
+        best_effort: Continue converting even if errors occur (logs errors but doesn't stop)
 
     Returns:
         None
@@ -43,6 +45,7 @@ def convert_tabular_to_mcap(
         output_path=output_path,
         topic_prefix=topic_prefix,
         test_mode=test_mode,
+        best_effort=best_effort,
     )
 
 
@@ -105,6 +108,11 @@ def main() -> None:
         "--test-mode",
         action="store_true",
         help="Test mode: only process the first 5 rows of each CSV file",
+    )
+    parser.add_argument(
+        "--best-effort",
+        action="store_true",
+        help="Continue converting even if errors occur (logs errors but doesn't stop)",
     )
 
     # Subparser for gen command (generate converter_functions.yaml template)
@@ -183,6 +191,7 @@ def main() -> None:
             args.topic_prefix,
             converter_functions_path,
             args.test_mode,
+            args.best_effort,
         )
 
     # Calculate and log total program execution time

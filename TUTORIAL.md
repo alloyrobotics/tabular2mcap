@@ -118,9 +118,64 @@ tabular2mcap -i /path/to/data/directory -o output.mcap -c config.yaml -f convert
 
 Open your generated MCAP file in [Foxglove Studio](https://foxglove.dev/download) to verify the conversion.
 
+## Step 6: Bonus - Add 3D Transform for GPS Visualization
+
+You can add multiple converter functions for the same CSV file to create different message types. For example, you can generate a 3D transform from GPS coordinates to visualize the robot's position with altitude on a map in Foxglove Studio.
+
+### Update config.yaml
+
+Add a second converter function to the `location.csv` mapping:
+
+```yaml
+tabular_mappings:
+  - file_pattern: "location.csv"
+    converter_functions:
+      - function_name: "row_to_location_fix"
+        schema_name: "sensor_msgs/msg/NavSatFix"
+        topic_suffix: "LocationFix"
+      - function_name: "row_to_transform"
+        schema_name: "geometry_msgs/msg/TransformStamped"
+        topic_suffix: "Transform"
+```
+
+### Add to converter_functions.yaml
+
+Add the transform converter function:
+
+```yaml
+functions:
+  # ... existing functions ...
+
+  row_to_transform:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: geometry_msgs/msg/TransformStamped
+    template: |-
+      {
+        "header": {
+          "stamp": {
+            "sec": {{ (timestamp_sec) | int }},
+            "nanosec": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+          },
+          "frame_id": "world"
+        },
+        "child_frame_id": "gps",
+        "transform": {
+          "translation": {{ latlon_to_utm(latitude, longitude, altitude) | safe }},
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        }
+      }
+```
+
+This creates a transform from the `world` frame to the `gps` frame, converting GPS coordinates to UTM coordinates for 3D visualization. In Foxglove Studio, you can view the robot's path with elevation using the 3D view panel with a map overlay.
 
 ## Troubleshooting
 
-1. **Column name issues**: The tool automatically sanitizes column names by replacing spaces with `_` and removing special characters
-2. **Data type conversion**: Use Jinja2 filters like `| float`, `| int`, `| tojson` for proper type conversion
-3. **Missing data**: Use `<column_name> or 0` filter to handle missing values
+1. **Missing data**: Use `<column_name> or 0` filter to handle missing values in your converter function templates
