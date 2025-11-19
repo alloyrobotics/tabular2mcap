@@ -375,6 +375,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#step-6-bonus-add-3d-transform-for-gps-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6: Bonus - Add 3D Transform for GPS Visualization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 6: Bonus - Add 3D Transform for GPS Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#update-configyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-to-converter_functionsyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to converter_functions.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       Troubleshooting
@@ -622,6 +655,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#step-6-bonus-add-3d-transform-for-gps-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6: Bonus - Add 3D Transform for GPS Visualization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 6: Bonus - Add 3D Transform for GPS Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#update-configyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update config.yaml
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-to-converter_functionsyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to converter_functions.yaml
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       Troubleshooting
@@ -745,11 +811,56 @@ tabular2mcap<span class="w"> </span>-i<span class="w"> </span>/path/to/data/dire
 </code></pre></div>
 <h2 id="step-5-validate-output">Step 5: Validate Output</h2>
 <p>Open your generated MCAP file in <a href="https://foxglove.dev/download">Foxglove Studio</a> to verify the conversion.</p>
+<h2 id="step-6-bonus-add-3d-transform-for-gps-visualization">Step 6: Bonus - Add 3D Transform for GPS Visualization</h2>
+<p>You can add multiple converter functions for the same CSV file to create different message types. For example, you can generate a 3D transform from GPS coordinates to visualize the robot's position with altitude on a map in Foxglove Studio.</p>
+<h3 id="update-configyaml">Update config.yaml</h3>
+<p>Add a second converter function to the <code>location.csv</code> mapping:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">tabular_mappings</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;location.csv&quot;</span>
+<span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_location_fix&quot;</span>
+<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor_msgs/msg/NavSatFix&quot;</span>
+<span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;LocationFix&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_transform&quot;</span>
+<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;geometry_msgs/msg/TransformStamped&quot;</span>
+<span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Transform&quot;</span>
+</code></pre></div>
+<h3 id="add-to-converter_functionsyaml">Add to converter_functions.yaml</h3>
+<p>Add the transform converter function:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">functions</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># ... existing functions ...</span>
+
+<span class="w">  </span><span class="nt">row_to_transform</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">available_columns</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;location.csv:</span><span class="nv"> </span><span class="s">timestamp_sec,</span><span class="nv"> </span><span class="s">latitude,</span><span class="nv"> </span><span class="s">longitude,</span><span class="nv"> </span><span class="s">altitude,</span><span class="nv"> </span><span class="s">latitude_error,</span><span class="nv"> </span><span class="s">longitude_error,</span><span class="nv"> </span><span class="s">altitude_error&#39;</span>
+<span class="w">    </span><span class="nt">log_time_template</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">(timestamp_sec</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1_000_000_000)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">int</span><span class="nv"> </span><span class="s">}}&#39;</span>
+<span class="w">    </span><span class="nt">publish_time_template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="w">    </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">geometry_msgs/msg/TransformStamped</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|-</span>
+<span class="w">      </span><span class="no">{</span>
+<span class="w">        </span><span class="no">&quot;header&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;stamp&quot;: {</span>
+<span class="w">            </span><span class="no">&quot;sec&quot;: {{ (timestamp_sec) | int }},</span>
+<span class="w">            </span><span class="no">&quot;nanosec&quot;: {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}</span>
+<span class="w">          </span><span class="no">},</span>
+<span class="w">          </span><span class="no">&quot;frame_id&quot;: &quot;world&quot;</span>
+<span class="w">        </span><span class="no">},</span>
+<span class="w">        </span><span class="no">&quot;child_frame_id&quot;: &quot;gps&quot;,</span>
+<span class="w">        </span><span class="no">&quot;transform&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;translation&quot;: {{ latlon_to_utm(latitude, longitude, altitude) | safe }},</span>
+<span class="w">          </span><span class="no">&quot;rotation&quot;: {</span>
+<span class="w">            </span><span class="no">&quot;x&quot;: 0.0,</span>
+<span class="w">            </span><span class="no">&quot;y&quot;: 0.0,</span>
+<span class="w">            </span><span class="no">&quot;z&quot;: 0.0,</span>
+<span class="w">            </span><span class="no">&quot;w&quot;: 1.0</span>
+<span class="w">          </span><span class="no">}</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">      </span><span class="no">}</span>
+</code></pre></div>
+<p>This creates a transform from the <code>world</code> frame to the <code>gps</code> frame, converting GPS coordinates to UTM coordinates for 3D visualization. In Foxglove Studio, you can view the robot's path with elevation using the 3D view panel with a map overlay.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ol>
-<li><strong>Column name issues</strong>: The tool automatically sanitizes column names by replacing spaces with <code>_</code> and removing special characters</li>
-<li><strong>Data type conversion</strong>: Use Jinja2 filters like <code>| float</code>, <code>| int</code>, <code>| tojson</code> for proper type conversion</li>
-<li><strong>Missing data</strong>: Use <code>&lt;column_name&gt; or 0</code> filter to handle missing values</li>
+<li><strong>Missing data</strong>: Use <code>&lt;column_name&gt; or 0</code> filter to handle missing values in your converter function templates</li>
 </ol>
 
 
