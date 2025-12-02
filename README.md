@@ -7,6 +7,19 @@ Convert tabular data (CSV, Parquet, Excel, and more) to MCAP format with support
 
 > **Please ⭐ if this helps you today!**
 
+## 🎥 Video tutorial
+
+Convert CSV, Excel, or Parquet to MCAP in minutes with this step‑by‑step walkthrough.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=jhVM6RGVs1M" target="_blank">
+    <img src="https://img.youtube.com/vi/jhVM6RGVs1M/hqdefault.jpg"
+         alt="Converting CSV to MCAP tutorial"
+         width="640">
+  </a>
+</p>
+
+
 ## Features
 
 - **Multi-Format Support**: Convert to ROS2 or JSON messages with support for standard message types (e.g., `sensor_msgs/msg/NavSatFix`, `geometry_msgs/msg/TransformStamped`, `foxglove.LocationFix`, and more)
