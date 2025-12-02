@@ -7,7 +7,7 @@ Convert tabular data (CSV, Parquet, Excel, and more) to MCAP format with support
 
 > **Please ⭐ if this helps you today!**
 
-## 🎥 Video tutorial
+## 🎥 Video Tutorial
 
 Convert CSV, Excel, or Parquet to MCAP in minutes with this step‑by‑step walkthrough.
 
