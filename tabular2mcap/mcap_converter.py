@@ -7,12 +7,13 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from mcap.writer import Writer as McapWriter
+from mcap_protobuf.writer import Writer as McapProtobufWriter
 from mcap_ros2.writer import Writer as McapRos2Writer
 from tqdm import tqdm
 
 from tabular2mcap.schemas.cache import download_and_cache_all_repos
 
-from .converter import ConverterBase, JsonConverter, Ros2Converter
+from .converter import ConverterBase, JsonConverter, ProtobufConverter, Ros2Converter
 from .converter.functions import (
     ConverterFunction,
     ConverterFunctionJinja2Environment,
@@ -39,7 +40,7 @@ from .loader import (
 
 logger = logging.getLogger(__name__)
 
-SUPPORT_WRITER_FORMATS = ["json", "ros2"]
+SUPPORT_WRITER_FORMATS = ["json", "ros2", "protobuf"]
 
 
 class McapConverter:
@@ -49,7 +50,8 @@ class McapConverter:
     converter_functions: dict[str, Any]
     shared_jinja2_env: ConverterFunctionJinja2Environment
 
-    _writer: McapWriter | McapRos2Writer
+    # Writer is kept separate from converter to support future multi-format per MCAP file
+    _writer: McapWriter | McapRos2Writer | McapProtobufWriter
     _converter: ConverterBase
     _schema_ids: dict[str, int]
 
@@ -146,6 +148,9 @@ class McapConverter:
             elif self.mcap_config.writer_format == "ros2":
                 self._writer = McapRos2Writer(f)
                 self._converter = Ros2Converter(self._writer)
+            elif self.mcap_config.writer_format == "protobuf":
+                self._writer = McapProtobufWriter(f)
+                self._converter = ProtobufConverter(self._writer)
 
             # Print conversion plan
             logger.info("\n" + "=" * 60)
@@ -540,6 +545,8 @@ class McapConverter:
             self._converter = JsonConverter()
         elif self.mcap_config.writer_format == "ros2":
             self._converter = Ros2Converter()
+        elif self.mcap_config.writer_format == "protobuf":
+            self._converter = ProtobufConverter()
 
         conv_func_file = ConverterFunctionFile()
         conv_func_to_file_pattern_map = {}

@@ -1,6 +1,6 @@
 [project]
 name = "tabular2mcap"
-version = "0.1.8"
+version = "0.1.9"
 description = "Convert tabular data (CSV, Parquet, Excel, etc.) to MCAP format with support for ROS2 and JSON schemas"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,6 +26,8 @@ orc = ["pyarrow>=21.0.0"]
 excel = ["openpyxl>=3.0.0"]
 excel-legacy = ["xlrd>=2.0.0"]
 xml = ["lxml>=4.9.0"]
+# Writer format support
+protobuf = ["mcap-protobuf-support>=0.5.2", "foxglove-schemas-protobuf>=0.1.1"]
 # All tabular formats
 all-formats = [
     "pyarrow>=21.0.0",
