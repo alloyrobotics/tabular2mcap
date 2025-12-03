@@ -22,7 +22,7 @@ Convert CSV, Excel, or Parquet to MCAP in minutes with this step‑by‑step wal
 
 ## Features
 
-- **Multi-Format Support**: Convert to ROS2 or JSON messages with support for standard message types (e.g., `sensor_msgs/msg/NavSatFix`, `geometry_msgs/msg/TransformStamped`, `foxglove.LocationFix`, and more)
+- **Multi-Format Support**: Convert to ROS2, JSON, or Protobuf messages with support for standard message types (e.g., `sensor_msgs/msg/NavSatFix`, `geometry_msgs/msg/TransformStamped`, `foxglove.LocationFix`, and more)
 - **Configuration-Driven**: YAML-based mapping with Jinja2 templates for flexible data transformation
 - **Batch Processing**: Process multiple files and directories with a single command
 
@@ -41,6 +41,7 @@ pip install tabular2mcap[orc]          # ORC files
 pip install tabular2mcap[excel]        # Excel files (.xlsx)
 pip install tabular2mcap[excel-legacy] # Excel files (.xls)
 pip install tabular2mcap[xml]          # XML files
+pip install tabular2mcap[protobuf]     # Protobuf output format
 pip install tabular2mcap[all-formats]  # All formats
 ```
 
@@ -86,6 +87,20 @@ tabular_mappings:
         schema_name: "sensor_msgs/msg/NavSatFix"
         topic_suffix: "NavSatFix"
 ```
+
+**Protobuf Format:**
+```yaml
+# config.yaml
+writer_format: "protobuf"
+tabular_mappings:
+  - file_pattern: '**/data.csv'
+    converter_functions:
+      - function_name: "row_to_location_fix"
+        schema_name: "foxglove.LocationFix"
+        topic_suffix: "LocationFix"
+```
+
+> **Note:** Protobuf `repeated` fields are variable length (no fixed-size arrays like ROS2). Array templates show a single placeholder element; populate with actual data dynamically.
 
 
 ## Tutorial
