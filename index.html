@@ -762,7 +762,7 @@
 
 <h2 id="features">Features</h2>
 <ul>
-<li><strong>Multi-Format Support</strong>: Convert to ROS2 or JSON messages with support for standard message types (e.g., <code>sensor_msgs/msg/NavSatFix</code>, <code>geometry_msgs/msg/TransformStamped</code>, <code>foxglove.LocationFix</code>, and more)</li>
+<li><strong>Multi-Format Support</strong>: Convert to ROS2, JSON, or Protobuf messages with support for standard message types (e.g., <code>sensor_msgs/msg/NavSatFix</code>, <code>geometry_msgs/msg/TransformStamped</code>, <code>foxglove.LocationFix</code>, and more)</li>
 <li><strong>Configuration-Driven</strong>: YAML-based mapping with Jinja2 templates for flexible data transformation</li>
 <li><strong>Batch Processing</strong>: Process multiple files and directories with a single command</li>
 </ul>
@@ -778,6 +778,7 @@ pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span clas
 pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>excel<span class="o">]</span><span class="w">        </span><span class="c1"># Excel files (.xlsx)</span>
 pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>excel-legacy<span class="o">]</span><span class="w"> </span><span class="c1"># Excel files (.xls)</span>
 pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>xml<span class="o">]</span><span class="w">          </span><span class="c1"># XML files</span>
+pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>protobuf<span class="o">]</span><span class="w">     </span><span class="c1"># Protobuf output format</span>
 pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span class="o">[</span>all-formats<span class="o">]</span><span class="w">  </span><span class="c1"># All formats</span>
 </code></pre></div>
 <h3 id="basic-usage">Basic Usage</h3>
@@ -814,6 +815,19 @@ pip<span class="w"> </span>install<span class="w"> </span>tabular2mcap<span clas
 <span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sensor_msgs/msg/NavSatFix&quot;</span>
 <span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NavSatFix&quot;</span>
 </code></pre></div></p>
+<p><strong>Protobuf Format:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># config.yaml</span>
+<span class="nt">writer_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;protobuf&quot;</span>
+<span class="nt">tabular_mappings</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">file_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;**/data.csv&#39;</span>
+<span class="w">    </span><span class="nt">converter_functions</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">function_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;row_to_location_fix&quot;</span>
+<span class="w">        </span><span class="nt">schema_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foxglove.LocationFix&quot;</span>
+<span class="w">        </span><span class="nt">topic_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;LocationFix&quot;</span>
+</code></pre></div></p>
+<blockquote>
+<p><strong>Note:</strong> Protobuf <code>repeated</code> fields are variable length (no fixed-size arrays like ROS2). Array templates show a single placeholder element; populate with actual data dynamically.</p>
+</blockquote>
 <h2 id="tutorial">Tutorial</h2>
 <p>For detailed instructions on adding support for new types of CSV data, see the <a href="https://alloyrobotics.github.io/tabular2mcap/tutorial/">Tutorial</a> in the documentation.</p>
 <h2 id="supported-by">Supported By</h2>
