@@ -1,0 +1,59 @@
+functions:
+  row_to_location_fix:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: foxglove.LocationFix
+    template: |-
+      {
+        "timestamp": {
+          "seconds": {{ <seconds_column> | int }},
+          "nanos": {{ <nanos_column> | int }}
+        },
+        "frame_id": "{{ <frame_id_column> }}",
+        "latitude": {{ <latitude_column> | float }},
+        "longitude": {{ <longitude_column> | float }},
+        "altitude": {{ <altitude_column> | float }},
+        "position_covariance": [
+          {{ <position_covariance_0_column> | float }}
+        ],
+        "position_covariance_type": {{ <position_covariance_type_column> | int }}
+      }
+  row_to_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'
+  row_to_transform:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: foxglove.FrameTransforms
+    template: |-
+      {
+        "transforms": [
+          {
+            "timestamp": {
+              "seconds": {{ <seconds_column> | int }},
+              "nanos": {{ <nanos_column> | int }}
+            },
+            "parent_frame_id": "{{ <parent_frame_id_column> }}",
+            "child_frame_id": "{{ <child_frame_id_column> }}",
+            "translation": {
+              "x": {{ <x_column> | float }},
+              "y": {{ <y_column> | float }},
+              "z": {{ <z_column> | float }}
+            },
+            "rotation": {
+              "x": {{ <x_column> | float }},
+              "y": {{ <y_column> | float }},
+              "z": {{ <z_column> | float }},
+              "w": {{ <w_column> | float }}
+            }
+          }
+        ]
+      }

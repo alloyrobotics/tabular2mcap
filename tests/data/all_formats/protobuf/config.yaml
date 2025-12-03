@@ -1,0 +1,24 @@
+# Mapping configuration for tabular data to MCAP conversion
+# This file defines how different CSV files should be processed and converted
+
+writer_format: "protobuf"  # Output format: ros1, ros2, json, or protobuf. Other formats are not supported yet.
+
+# Tabular data mappings
+tabular_mappings:
+  - file_pattern: "location.csv"
+    converter_functions:
+      - function_name: "row_to_location_fix"
+        schema_name: "foxglove.LocationFix"
+        topic_suffix: "LocationFix"
+      - function_name: "row_to_transform"
+        schema_name: "foxglove.FrameTransforms"
+        topic_suffix: "FrameTransforms"
+
+  - file_pattern: "sensor.csv"
+    converter_functions:
+      - function_name: "row_to_timestamp"
+        schema_name: null
+        topic_suffix: "Data"
+        exclude_columns:
+        # Exclude timestamp_sec; all other columns (pressure1, pressure2, sensor3, sensor4) are included
+        - "timestamp_sec"

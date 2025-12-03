@@ -12,11 +12,6 @@ from tabular2mcap.mcap_converter import McapConverter
 
 DATA_PATH = Path(__file__).parent / "data"
 TEST_OUTPUT_PATH = Path(__file__).parent / "test_output"
-ALL_MCAP_NAMES = [
-    "alloy",
-    "lerobot",
-]
-ALL_WRITER_FORMATS = ["json", "ros2"]
 logger = logging.getLogger(__name__)
 
 
@@ -131,8 +126,17 @@ def compare_mcap_files(
                 )
 
 
-@pytest.mark.parametrize("mcap_name", ALL_MCAP_NAMES)
-@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+@pytest.mark.parametrize(
+    "mcap_name,writer_format",
+    [
+        ("alloy", "json"),
+        ("alloy", "ros2"),
+        ("alloy", "protobuf"),
+        ("lerobot", "json"),
+        ("lerobot", "ros2"),
+        # TODO: ("lerobot", "protobuf"), # attachments not supported yet
+    ],
+)
 def test_mcap_conversion(mcap_name: str, writer_format: str):
     """Test mcap conversion for all mcap files and writer formats."""
     setup_mcap_conversion(mcap_name, writer_format, best_effort=True)
@@ -143,8 +147,17 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
     compare_mcap_files(mcap_file, ref_mcap_file, ref_folder)
 
 
-@pytest.mark.parametrize("mcap_name", ALL_MCAP_NAMES)
-@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+@pytest.mark.parametrize(
+    "mcap_name,writer_format",
+    [
+        ("alloy", "json"),
+        ("alloy", "ros2"),
+        ("lerobot", "json"),
+        ("lerobot", "ros2"),
+        ("alloy", "protobuf"),
+        # TODO: ("lerobot", "protobuf"), # attachments not supported yet
+    ],
+)
 def test_generate_converter_functions(mcap_name: str, writer_format: str):
     """Test converter function generation."""
     input_path = DATA_PATH / mcap_name
@@ -172,7 +185,7 @@ def test_generate_converter_functions(mcap_name: str, writer_format: str):
 
 
 @pytest.mark.parametrize("mcap_name", ["alloy"])
-@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+@pytest.mark.parametrize("writer_format", ["json", "ros2", "protobuf"])
 def test_not_best_effort_flag(mcap_name: str, writer_format: str):
     """Test that best_effort flag allows conversion to continue despite errors."""
     # Test: Without best_effort flag, should raise ValueError
@@ -185,7 +198,7 @@ def test_not_best_effort_flag(mcap_name: str, writer_format: str):
 
 
 @pytest.mark.parametrize("mcap_name", ["all_formats"])
-@pytest.mark.parametrize("writer_format", ALL_WRITER_FORMATS)
+@pytest.mark.parametrize("writer_format", ["json", "ros2", "protobuf"])
 @pytest.mark.parametrize(
     "input_format",
     ["csv", "feather", "json", "jsonl", "orc", "parquet", "pkl", "tsv", "xlsx", "xml"],

@@ -1,0 +1,68 @@
+functions:
+  row_to_location_fix:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: foxglove.LocationFix
+    template: |-
+      {
+        "timestamp": {
+          "seconds": {{ (timestamp_sec) | int }},
+          "nanos": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+        },
+        "frame_id": "gps",
+        "latitude": {{ latitude | float }},
+        "longitude": {{ longitude | float }},
+        "altitude": {{ altitude | float }},
+        "position_covariance": [
+          {{ (latitude_error or 0) ** 2 }},
+          0, 0,
+          0,
+          {{ (longitude_error or 0) ** 2 }},
+          0,
+          0, 0,
+          {{ (altitude_error or 0) ** 2 }}
+        ],
+        "position_covariance_type": 2
+      }
+  row_to_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'
+  row_to_transform:
+    available_columns:
+    - 'location.csv: timestamp_sec, latitude, longitude, altitude, latitude_error, longitude_error, altitude_error'
+    log_time_template: '{{ (timestamp_sec * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: foxglove.FrameTransforms
+    template: |-
+      {
+        "transforms": [
+          {
+            "timestamp": {
+              "seconds": {{ (timestamp_sec) | int }},
+              "nanos": {{ ((timestamp_sec % 1) * 1_000_000_000) | int }}
+            },
+            "parent_frame_id": "world",
+            "child_frame_id": "gps",
+            "translation": {{ latlon_to_utm(latitude, longitude, altitude) | safe }},
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            }
+          }
+        ]
+      }
+  row_to_invalid_timestamp:
+    available_columns:
+    - 'sensor.csv: timestamp_sec, pressure1, pressure2, sensor3, sensor4'
+    log_time_template: '{{ (nonexistent_column * 1_000_000_000) | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'
