@@ -764,6 +764,33 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_foxglove_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_foxglove_compressed_image_data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_foxglove_protobuf_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_foxglove_protobuf_compressed_image_data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_ros2_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_ros2_compressed_image_data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tabular2mcap.converter.others.to_foxglove_log_level" class="md-nav__link">
     <span class="md-ellipsis">
       to_foxglove_log_level
@@ -1240,6 +1267,33 @@
   <a href="#tabular2mcap.converter.others.compressed_video_message_iterator" class="md-nav__link">
     <span class="md-ellipsis">
       compressed_video_message_iterator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_foxglove_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_foxglove_compressed_image_data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_foxglove_protobuf_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_foxglove_protobuf_compressed_image_data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabular2mcap.converter.others.create_ros2_compressed_image_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_ros2_compressed_image_data
     </span>
   </a>
   
@@ -3110,7 +3164,7 @@ foxglove.Log format messages. Handles multi-line log entries.</p>
 
 
 <h3 id="tabular2mcap.converter.others.compressed_image_message_iterator" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">compressed_image_message_iterator</span><span class="p">(</span><span class="n">video_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">compressed_image_message_iterator</span><span class="p">(</span><span class="n">video_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">,</span> <span class="n">use_foxglove_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">writer_format</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span></code>
 
 </h3>
 
@@ -3118,6 +3172,117 @@ foxglove.Log format messages. Handles multi-line log entries.</p>
     <div class="doc doc-contents ">
 
         <p>Generate compressed image messages from video frames.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>video_frames</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="numpy.ndarray">ndarray</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of video frames as numpy arrays</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fps</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frames per second</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image format (e.g., 'jpeg', 'png')</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frame ID string</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_foxglove_format</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, use Foxglove message format; otherwise use ROS2 format</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>writer_format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>MCAP writer format ('json', 'ros2', 'protobuf')</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;json&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -3128,7 +3293,7 @@ foxglove.Log format messages. Handles multi-line log entries.</p>
 
 
 <h3 id="tabular2mcap.converter.others.compressed_video_message_iterator" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">compressed_video_message_iterator</span><span class="p">(</span><span class="n">video_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">compressed_video_message_iterator</span><span class="p">(</span><span class="n">video_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">,</span> <span class="n">use_foxglove_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">writer_format</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span></code>
 
 </h3>
 
@@ -3136,6 +3301,478 @@ foxglove.Log format messages. Handles multi-line log entries.</p>
     <div class="doc doc-contents ">
 
         <p>Generate compressed video messages from video frames.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>video_frames</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="numpy.ndarray">ndarray</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of video frames as numpy arrays</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fps</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frames per second</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Video format (e.g., 'h264', 'h265')</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frame ID string</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_foxglove_format</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Unused - CompressedVideo only has Foxglove schema (no ROS2 equivalent).
+Kept for API consistency with compressed_image_message_iterator.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>writer_format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>MCAP writer format ('json', 'ros2', 'protobuf')</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;json&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.others.create_foxglove_compressed_image_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">create_foxglove_compressed_image_data</span><span class="p">(</span><span class="n">frame_timestamp</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">,</span> <span class="n">encoded_data</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Create Foxglove CompressedImage message data structure (JSON format).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_timestamp</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Timestamp in seconds</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frame ID string</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>encoded_data</code>
+            </td>
+            <td>
+                  <code><span title="bytes">bytes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Encoded image data as bytes</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image format (e.g., 'jpeg', 'png')</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary with Foxglove CompressedImage message structure</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.others.create_foxglove_protobuf_compressed_image_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">create_foxglove_protobuf_compressed_image_data</span><span class="p">(</span><span class="n">frame_timestamp</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">,</span> <span class="n">encoded_data</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Create Foxglove CompressedImage message data structure (Protobuf format).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_timestamp</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Timestamp in seconds</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frame ID string</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>encoded_data</code>
+            </td>
+            <td>
+                  <code><span title="bytes">bytes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Encoded image data as bytes</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image format (e.g., 'jpeg', 'png')</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary with Foxglove Protobuf CompressedImage message structure</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="tabular2mcap.converter.others.create_ros2_compressed_image_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">create_ros2_compressed_image_data</span><span class="p">(</span><span class="n">frame_timestamp</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">,</span> <span class="n">encoded_data</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Create ROS2 sensor_msgs/msg/CompressedImage message data structure.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_timestamp</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Timestamp in seconds</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frame_id</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Frame ID string</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>encoded_data</code>
+            </td>
+            <td>
+                  <code><span title="bytes">bytes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Encoded image data as bytes</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>format</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image format (e.g., 'jpeg', 'png')</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary with ROS2 CompressedImage message structure</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
