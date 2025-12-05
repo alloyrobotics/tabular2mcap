@@ -39,25 +39,52 @@ def _sanitize_field_name(name: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_]", "_", name).lower()
 
 
-def _numpy_to_proto_type(dtype: np.dtype) -> int:
-    """Map numpy dtype to protobuf field type."""
+def _numpy_to_proto_type(dtype: np.dtype, sample_value=None) -> tuple[int, bool]:
+    """Map numpy dtype to protobuf field type.
+
+    Returns:
+        Tuple of (proto_type, is_repeated)
+    """
     kind, size = dtype.kind, dtype.itemsize
     t = pb2.FieldDescriptorProto
+
+    # Handle object dtype (could be list/array)
+    if kind == "O" and sample_value is not None:
+        if isinstance(sample_value, (list, np.ndarray)):
+            # It's a repeated field - determine element type
+            if len(sample_value) > 0:
+                elem = sample_value[0]
+                if isinstance(elem, (int, np.integer)):
+                    return t.TYPE_INT64, True
+                elif isinstance(elem, (float, np.floating)):
+                    return t.TYPE_DOUBLE, True
+                elif isinstance(elem, bool):
+                    return t.TYPE_BOOL, True
+            return t.TYPE_DOUBLE, True  # Default to double for numeric arrays
+        elif isinstance(sample_value, str):
+            return t.TYPE_STRING, False
+        return t.TYPE_STRING, False
+
     if kind == "b":
-        return t.TYPE_BOOL
+        return t.TYPE_BOOL, False
     if kind == "i":
-        return t.TYPE_INT64 if size > 4 else t.TYPE_INT32
+        return t.TYPE_INT64 if size > 4 else t.TYPE_INT32, False
     if kind == "u":
-        return t.TYPE_UINT64 if size > 4 else t.TYPE_UINT32
+        return t.TYPE_UINT64 if size > 4 else t.TYPE_UINT32, False
     if kind == "f":
-        return t.TYPE_DOUBLE if size > 4 else t.TYPE_FLOAT
-    return t.TYPE_STRING
+        return t.TYPE_DOUBLE if size > 4 else t.TYPE_FLOAT, False
+    return t.TYPE_STRING, False
 
 
 def _create_dynamic_proto_class(
-    schema_name: str, columns: list[tuple[str, np.dtype]]
+    schema_name: str, columns: list[tuple[str, np.dtype, Any]]
 ) -> type:
-    """Create a dynamic protobuf message class from column definitions."""
+    """Create a dynamic protobuf message class from column definitions.
+
+    Args:
+        schema_name: Full schema name (e.g., 'table.path.Data')
+        columns: List of (column_name, dtype, sample_value) tuples
+    """
     parts = schema_name.rsplit(".", 1)
     pkg_name, msg_name = (
         (parts[0], parts[-1]) if len(parts) > 1 else ("dynamic", parts[0])
@@ -71,12 +98,16 @@ def _create_dynamic_proto_class(
     msg_proto = file_proto.message_type.add()
     msg_proto.name = msg_name
 
-    for i, (col_name, dtype) in enumerate(columns, start=1):
+    for i, (col_name, dtype, sample_value) in enumerate(columns, start=1):
         field = msg_proto.field.add()
         field.name = _sanitize_field_name(col_name)
         field.number = i
-        field.type = _numpy_to_proto_type(dtype)
-        field.label = pb2.FieldDescriptorProto.LABEL_OPTIONAL
+        proto_type, is_repeated = _numpy_to_proto_type(dtype, sample_value)
+        field.type = proto_type
+        if is_repeated:
+            field.label = pb2.FieldDescriptorProto.LABEL_REPEATED
+        else:
+            field.label = pb2.FieldDescriptorProto.LABEL_OPTIONAL
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)
@@ -121,7 +152,7 @@ def _field_to_template(field: FD, col_name: str) -> Any:
     return f"{{{{ <{col_name}_column>{filt} }}}}"
 
 
-def _proto_to_template(proto_class: type) -> dict:
+def _proto_to_template(proto_class: Any) -> dict:
     """Convert a protobuf class to a template dict."""
     return {
         f.name: _field_to_template(f, f.name) for f in proto_class.DESCRIPTOR.fields
@@ -132,7 +163,7 @@ class ProtobufConverter(ConverterBase):
     """Protobuf format converter that wraps Protobuf-specific MCAP writer operations."""
 
     _writer: McapProtobufWriter | None
-    _schemas: dict[int, type]  # schema_id -> protobuf class
+    _schemas: dict[int, Any]  # schema_id -> protobuf class
     _schema_names: dict[str, int]  # schema_name -> schema_id
 
     def __init__(self, writer: McapProtobufWriter | None = None):
@@ -144,21 +175,26 @@ class ProtobufConverter(ConverterBase):
     @property
     def writer(self) -> Any:
         """Get the underlying writer instance."""
-        return self._writer._writer
+        return self._writer._writer  # type: ignore[union-attr]
 
     def register_generic_schema(
         self, df: Any, schema_name: str, exclude_keys: list[str] | None = None
     ) -> tuple[int, dict[str, str]]:
         """Register a dynamic Protobuf schema from DataFrame columns."""
         exclude = set(exclude_keys or []) | {"timestamp"}
-        columns = [(col, df[col].dtype) for col in df.columns if col not in exclude]
+        # Include sample value for each column to detect array types
+        columns = [
+            (col, df[col].dtype, df[col].iloc[0] if len(df) > 0 else None)
+            for col in df.columns
+            if col not in exclude
+        ]
 
         schema_id = len(self._schemas) + 1
         self._schemas[schema_id] = _create_dynamic_proto_class(schema_name, columns)
         self._schema_names[schema_name] = schema_id
 
         # Return mapping: sanitized_field_name -> original_column_name
-        schema_keys = {_sanitize_field_name(col): col for col, _ in columns}
+        schema_keys = {_sanitize_field_name(col): col for col, _, _ in columns}
         return schema_id, schema_keys
 
     def register_schema(self, schema_name: str) -> int:
@@ -200,7 +236,6 @@ class ProtobufConverter(ConverterBase):
             raise ValueError(
                 f"Invalid schema_id: {schema_id}. Must register schema first."
             )
-
         proto_class = self._schemas[schema_id]
         for _idx, converted_row in tqdm(
             iterator,
@@ -209,7 +244,9 @@ class ProtobufConverter(ConverterBase):
             leave=False,
             unit=unit,
         ):
-            self._writer.write_message(
+            # if _idx < 5:
+            #     logger.info(f"Writing message {_idx}: {converted_row.data}")
+            self._writer.write_message(  # type: ignore[union-attr]
                 topic=topic_name,
                 message=proto_class(**converted_row.data),
                 log_time=converted_row.log_time_ns,
