@@ -90,7 +90,7 @@ class ConverterFunction(BaseModel):
         description="Optional Jinja2 environment to use. If not provided, a new one will be created.",
         default=None,
     )
-    _jinja2_template: Template = PrivateAttr(default=None)
+    _jinja2_template: Template | None = PrivateAttr(default=None)
     _log_time_template: Template | None = PrivateAttr(default=None)
     _publish_time_template: Template | None = PrivateAttr(default=None)
 
@@ -123,7 +123,7 @@ class ConverterFunction(BaseModel):
             context = row.to_dict()
 
             # Render template
-            result = self._jinja2_template.render(**context)
+            result = self._jinja2_template.render(**context)  # type: ignore[union-attr]
 
             # Parse JSON result
             message_data = json.loads(result)
@@ -180,7 +180,7 @@ def generate_generic_converter_func(
         )
         if isinstance(schema_keys, dict):
             # ros2key, original_key
-            msg_row_key_pairs = schema_keys.items()
+            msg_row_key_pairs: list[tuple[str, str]] = list(schema_keys.items())
         else:
             # original_key, original_key
             msg_row_key_pairs = [(key, key) for key in schema_keys]

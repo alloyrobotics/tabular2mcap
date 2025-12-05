@@ -3,6 +3,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from jinja2 import Template
@@ -13,10 +14,101 @@ from tabular2mcap.loader.models import WRITER_FORMATS
 logger = logging.getLogger(__name__)
 
 
+def create_foxglove_compressed_image_data(
+    frame_timestamp: float, frame_id: str, encoded_data: bytes, format: str
+) -> dict:
+    """Create Foxglove CompressedImage message data structure (JSON format).
+
+    Args:
+        frame_timestamp: Timestamp in seconds
+        frame_id: Frame ID string
+        encoded_data: Encoded image data as bytes
+        format: Image format (e.g., 'jpeg', 'png')
+
+    Returns:
+        Dictionary with Foxglove CompressedImage message structure
+    """
+    return {
+        "timestamp": {
+            "sec": int(frame_timestamp),
+            "nsec": int((frame_timestamp % 1) * 1_000_000_000),
+        },
+        "frame_id": frame_id,
+        "data": encoded_data,
+        "format": format,
+    }
+
+
+def create_foxglove_protobuf_compressed_image_data(
+    frame_timestamp: float, frame_id: str, encoded_data: bytes, format: str
+) -> dict:
+    """Create Foxglove CompressedImage message data structure (Protobuf format).
+
+    Args:
+        frame_timestamp: Timestamp in seconds
+        frame_id: Frame ID string
+        encoded_data: Encoded image data as bytes
+        format: Image format (e.g., 'jpeg', 'png')
+
+    Returns:
+        Dictionary with Foxglove Protobuf CompressedImage message structure
+    """
+    return {
+        "timestamp": {
+            "seconds": int(frame_timestamp),
+            "nanos": int((frame_timestamp % 1) * 1_000_000_000),
+        },
+        "frame_id": frame_id,
+        "data": encoded_data,
+        "format": format,
+    }
+
+
+def create_ros2_compressed_image_data(
+    frame_timestamp: float, frame_id: str, encoded_data: bytes, format: str
+) -> dict:
+    """Create ROS2 sensor_msgs/msg/CompressedImage message data structure.
+
+    Args:
+        frame_timestamp: Timestamp in seconds
+        frame_id: Frame ID string
+        encoded_data: Encoded image data as bytes
+        format: Image format (e.g., 'jpeg', 'png')
+
+    Returns:
+        Dictionary with ROS2 CompressedImage message structure
+    """
+    return {
+        "header": {
+            "stamp": {
+                "sec": int(frame_timestamp),
+                "nanosec": int((frame_timestamp % 1) * 1_000_000_000),
+            },
+            "frame_id": frame_id,
+        },
+        "format": format,
+        "data": encoded_data,
+    }
+
+
 def compressed_image_message_iterator(
-    video_frames: list[np.ndarray], fps: float, format: str, frame_id: str
+    video_frames: list[np.ndarray],
+    fps: float,
+    format: str,
+    frame_id: str,
+    use_foxglove_format: bool = True,
+    writer_format: str = "json",
 ) -> Iterable[ConvertedRow]:
-    """Generate compressed image messages from video frames."""
+    """Generate compressed image messages from video frames.
+
+    Args:
+        video_frames: List of video frames as numpy arrays
+        fps: Frames per second
+        format: Image format (e.g., 'jpeg', 'png')
+        frame_id: Frame ID string
+        use_foxglove_format: If True, use Foxglove message format; otherwise use ROS2 format
+        writer_format: MCAP writer format ('json', 'ros2', 'protobuf')
+    """
     try:
         import cv2
     except ImportError as e:
@@ -29,6 +121,14 @@ def compressed_image_message_iterator(
         raise ValueError(
             f"CompressedImage unsupported format: {format}. Supported formats: {supported_formats}"
         )
+
+    # Select the appropriate message data creator function
+    if writer_format == "protobuf" and use_foxglove_format:
+        create_message_data = create_foxglove_protobuf_compressed_image_data
+    elif use_foxglove_format:
+        create_message_data = create_foxglove_compressed_image_data
+    else:
+        create_message_data = create_ros2_compressed_image_data
 
     # Process each video frame as a compressed image
     for frame_idx, frame in enumerate(video_frames):
@@ -43,24 +143,35 @@ def compressed_image_message_iterator(
 
         # Create compressed image message
         yield ConvertedRow(
-            data={
-                "timestamp": {
-                    "sec": int(frame_timestamp),
-                    "nsec": int((frame_timestamp % 1) * 1_000_000_000),
-                },
-                "frame_id": frame_id,
-                "data": encoded_img.tobytes(),  # base64.b64encode(encoded_img.tobytes()).decode("utf-8"),
-                "format": format,
-            },
+            data=create_message_data(
+                frame_timestamp=frame_timestamp,
+                frame_id=frame_id,
+                encoded_data=encoded_img.tobytes(),
+                format=format,
+            ),
             log_time_ns=int(frame_timestamp * 1_000_000_000),
             publish_time_ns=int(frame_timestamp * 1_000_000_000),
         )
 
 
 def compressed_video_message_iterator(
-    video_frames: list[np.ndarray], fps: float, format: str, frame_id: str
+    video_frames: list[np.ndarray],
+    fps: float,
+    format: str,
+    frame_id: str,
+    use_foxglove_format: bool = True,
+    writer_format: str = "json",
 ) -> Iterable[ConvertedRow]:
-    """Generate compressed video messages from video frames."""
+    """Generate compressed video messages from video frames.
+
+    Args:
+        video_frames: List of video frames as numpy arrays
+        fps: Frames per second
+        format: Video format (e.g., 'h264', 'h265')
+        frame_id: Frame ID string
+        use_foxglove_format: Unused, kept for API consistency with compressed_image_message_iterator
+        writer_format: MCAP writer format ('json', 'ros2', 'protobuf')
+    """
     try:
         import av
         import cv2
@@ -81,8 +192,15 @@ def compressed_video_message_iterator(
             f"Installed ffmped does not support format: {format}. Supported formats: {set(av.codecs_available) & supported_formats}"
         )
 
+    # Select the appropriate message data creator function
+    create_message_data = (
+        create_foxglove_protobuf_compressed_image_data
+        if writer_format == "protobuf"
+        else create_foxglove_compressed_image_data
+    )
+
     # Create codec context based on format
-    codec = av.codec.CodecContext.create(format, "w")
+    codec: Any = av.codec.CodecContext.create(format, "w")
     codec.width = width
     codec.height = height
     codec.framerate = int(fps)
@@ -94,7 +212,7 @@ def compressed_video_message_iterator(
     codec.open()
 
     # Encode frames
-    frame_timestamp = 0
+    frame_timestamp: float = 0
     frame_timestamp_step = 1 / fps
     for frame_idx, frame in enumerate(video_frames):
         # Convert BGR to RGB (OpenCV uses BGR, PyAV expects RGB)
@@ -103,24 +221,19 @@ def compressed_video_message_iterator(
         else:
             frame_rgb = frame
         # Create PyAV frame
-        av_frame = av.VideoFrame.from_ndarray(frame_rgb, format="rgb24")
+        av_frame = av.VideoFrame.from_ndarray(frame_rgb, format="rgb24")  # type: ignore[arg-type]
         av_frame.pts = frame_idx
 
         # Encode frame
         packets = codec.encode(av_frame)
         for packet in packets:
             yield ConvertedRow(
-                data={
-                    "timestamp": {
-                        "sec": int(frame_timestamp),
-                        "nsec": int((frame_timestamp % 1) * 1_000_000_000),
-                    },
-                    "frame_id": frame_id,
-                    "data": bytes(
-                        packet
-                    ),  # base64.b64encode(bytes(packet)).decode("utf-8"),
-                    "format": format,
-                },
+                data=create_message_data(
+                    frame_timestamp=frame_timestamp,
+                    frame_id=frame_id,
+                    encoded_data=bytes(packet),
+                    format=format,
+                ),
                 log_time_ns=int(frame_timestamp * 1_000_000_000),
                 publish_time_ns=int(frame_timestamp * 1_000_000_000),
             )
@@ -129,17 +242,12 @@ def compressed_video_message_iterator(
     packets = codec.encode(None)
     for packet in packets:
         yield ConvertedRow(
-            data={
-                "timestamp": {
-                    "sec": int(frame_timestamp),
-                    "nsec": int((frame_timestamp % 1) * 1_000_000_000),
-                },
-                "frame_id": frame_id,
-                "data": bytes(
-                    packet
-                ),  # base64.b64encode(bytes(packet)).decode("utf-8"),
-                "format": format,
-            },
+            data=create_message_data(
+                frame_timestamp=frame_timestamp,
+                frame_id=frame_id,
+                encoded_data=bytes(packet),
+                format=format,
+            ),
             log_time_ns=int(frame_timestamp * 1_000_000_000),
             publish_time_ns=int(frame_timestamp * 1_000_000_000),
         )
@@ -217,7 +325,7 @@ class LogConverter:
     name: str = "Log"
     datetime_format: str = "%Y-%m-%d %H:%M:%S"
     zero_first_timestamp: bool = True
-    _log_parser: re.Pattern | None = None
+    _log_parser: re.Pattern[str]
     _first_timestamp: float | None = None
 
     def __init__(
@@ -257,7 +365,7 @@ class LogConverter:
         self._log_parser = re.compile(regex_str, re.DOTALL)
 
         if writer_format == "json":
-            # rcl_interfaces/Log format
+            # foxglove.Log format (JSON)
             def convert_msg_to_data(gd: dict, timestamp: float) -> dict:
                 return {
                     "timestamp": {
@@ -271,8 +379,23 @@ class LogConverter:
                     "line": int(gd.get("lineno", 0)),
                 }
 
-        elif writer_format == "ros2":
+        elif writer_format == "protobuf":
+            # foxglove.Log format (Protobuf)
+            def convert_msg_to_data(gd: dict, timestamp: float) -> dict:
+                return {
+                    "timestamp": {
+                        "seconds": int(timestamp),
+                        "nanos": int((timestamp % 1) * 1_000_000_000),
+                    },
+                    "level": to_foxglove_log_level(gd.get("levelname", "")),
+                    "message": gd.get("message", ""),
+                    "name": self.name,
+                    "file": gd.get("filename", ""),
+                    "line": int(gd.get("lineno", 0)),
+                }
 
+        elif writer_format == "ros2":
+            # rcl_interfaces/msg/Log format
             def convert_msg_to_data(gd: dict, timestamp: float) -> dict:
                 return {
                     "stamp": {
@@ -343,7 +466,7 @@ class LogConverter:
         """
 
         with open(self.log_path) as log_file:
-            current_entry = []
+            current_entry: list[str] = []
             while True:
                 line = log_file.readline()
                 if not line:

@@ -72,16 +72,16 @@ class ConverterBase(ABC):
     @abstractmethod
     def write_messages_from_iterator(
         self,
-        iterator: Iterable[tuple[int, dict]],
+        iterator: Iterable[tuple[int, ConvertedRow]],
         topic_name: str,
-        schema_id: int | None,
+        schema_id: Any,
         data_length: int | None = None,
         unit: str = "msg",
     ) -> None:
         """Write messages to MCAP from an iterator.
 
         Args:
-            iterator: Iterator yielding (index, message) tuples
+            iterator: Iterator yielding (index, ConvertedRow) tuples
             topic_name: Topic name for the messages
             schema_id: Schema ID for the messages
             data_length: Optional total length for progress tracking

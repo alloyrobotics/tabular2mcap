@@ -13,7 +13,13 @@ from tqdm import tqdm
 
 from tabular2mcap.schemas.cache import download_and_cache_all_repos
 
-from .converter import ConverterBase, JsonConverter, ProtobufConverter, Ros2Converter
+from .converter import (
+    ConvertedRow,
+    ConverterBase,
+    JsonConverter,
+    ProtobufConverter,
+    Ros2Converter,
+)
 from .converter.functions import (
     ConverterFunction,
     ConverterFunctionJinja2Environment,
@@ -229,7 +235,7 @@ class McapConverter:
 
     def _prepare_mapping_tuples(self, input_path: Path) -> dict[str, list]:
         """Prepare mapping tuples for all data types."""
-        mappings = {
+        mappings: dict[str, list[Any]] = {
             "tabular": self.mcap_config.tabular_mappings,
             "other": self.mcap_config.other_mappings,
             "attachments": self.mcap_config.attachments,
@@ -346,7 +352,9 @@ class McapConverter:
                         # write messages
                         if schema_id is not None:
 
-                            def convert_row_iterator() -> Iterable[tuple[int, dict]]:
+                            def convert_row_iterator() -> Iterable[
+                                tuple[int, ConvertedRow]
+                            ]:
                                 for idx, row in df.iterrows():  # noqa: B023
                                     yield idx, convert_row(row)  # noqa: B023
 
@@ -363,7 +371,7 @@ class McapConverter:
                         )
             except Exception as e:
                 if best_effort:
-                    logger.error(
+                    logger.exception(
                         f"Error processing tabular file {input_file.relative_to(input_path)}: {e}"
                     )
                 else:
@@ -396,7 +404,9 @@ class McapConverter:
                 topic_name_prefix = f"{topic_prefix}{relative_path_no_ext}/"
 
                 # Get or register schema
-                schema_name = other_mapping.schema_name(self.mcap_config.writer_format)
+                schema_name = other_mapping.set_default_schema_name(
+                    self.mcap_config.writer_format
+                )
                 if schema_name in self._schema_ids:
                     schema_id = self._schema_ids[schema_name]
                 else:
@@ -414,19 +424,26 @@ class McapConverter:
 
                     # Create frame iterator based on type
                     if isinstance(other_mapping, CompressedImageMappingConfig):
-                        frame_iterator = compressed_image_message_iterator
+                        frame_iterator = compressed_image_message_iterator(
+                            video_frames=video_frames,
+                            fps=video_properties["fps"],
+                            format=other_mapping.format,
+                            frame_id=other_mapping.frame_id,
+                            use_foxglove_format=schema_name.startswith("foxglove"),
+                            writer_format=self.mcap_config.writer_format,
+                        )
                     else:  # CompressedVideoMappingConfig
-                        frame_iterator = compressed_video_message_iterator
+                        frame_iterator = compressed_video_message_iterator(
+                            video_frames=video_frames,
+                            fps=video_properties["fps"],
+                            format=other_mapping.format,
+                            frame_id=other_mapping.frame_id,
+                            use_foxglove_format=schema_name.startswith("foxglove"),
+                            writer_format=self.mcap_config.writer_format,
+                        )
 
                     self._converter.write_messages_from_iterator(
-                        iterator=enumerate(
-                            frame_iterator(
-                                video_frames=video_frames,
-                                fps=video_properties["fps"],
-                                format=other_mapping.format,
-                                frame_id=other_mapping.frame_id,
-                            )
-                        ),
+                        iterator=enumerate(frame_iterator),
                         topic_name=f"{topic_name_prefix}{other_mapping.topic_suffix}",
                         schema_id=schema_id,
                         data_length=len(video_frames),
@@ -549,7 +566,7 @@ class McapConverter:
             self._converter = ProtobufConverter()
 
         conv_func_file = ConverterFunctionFile()
-        conv_func_to_file_pattern_map = {}
+        conv_func_to_file_pattern_map: dict[str, list[str]] = {}
 
         for mappings in self.mcap_config.tabular_mappings:
             for conv_func in mappings.converter_functions:
@@ -581,8 +598,8 @@ class McapConverter:
                     mappings.file_pattern
                 )
 
-        for conv_func, file_patterns in conv_func_to_file_pattern_map.items():
-            conv_func_def = conv_func_file.functions[conv_func]
+        for conv_func_name, file_patterns in conv_func_to_file_pattern_map.items():
+            conv_func_def = conv_func_file.functions[conv_func_name]
             for file_pattern in file_patterns:
                 for input_file in input_path.glob(file_pattern):
                     relative_path = input_file.relative_to(input_path)
