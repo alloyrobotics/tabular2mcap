@@ -1,0 +1,8 @@
+functions:
+  row_to_message_with_timestamp:
+    available_columns:
+    - 'episode_000000.parquet: action, observation_state, timestamp, task_index, episode_index, frame_index, index'
+    log_time_template: '{{ <timestamp_nanosec_column> | int }}'
+    publish_time_template: null
+    schema_name: null
+    template: '{}'

@@ -40,6 +40,18 @@ class TabularMappingConfig(FileMatchingConfig):
 
 class CompressedImageMappingConfig(FileMatchingConfig):
     type: Literal["compressed_image"] = "compressed_image"
+    schema_name: (
+        Literal[
+            "foxglove_msgs/CompressedImage",
+            "foxglove_msgs/msg/CompressedImage",
+            "sensor_msgs/msg/CompressedImage",
+            "foxglove.CompressedImage",
+        ]
+        | None
+    ) = Field(
+        description="The name of schema to use for the mapping. If None, defaults are used: 'foxglove_msgs/CompressedImage' (ros1), 'sensor_msgs/msg/CompressedImage' (ros2), 'foxglove.CompressedImage' (json/protobuf)",
+        default=None,
+    )
     topic_suffix: str = Field(
         description="The suffix to append to the topic name for the mapping (e.g., 'CompressedImage')"
     )
@@ -51,17 +63,31 @@ class CompressedImageMappingConfig(FileMatchingConfig):
         default="jpeg",
     )
 
-    def schema_name(self, writer_format: WRITER_FORMATS) -> str:
-        if writer_format == "ros1":
-            return "foxglove_msgs/CompressedImage"
-        elif writer_format == "ros2":
-            return "foxglove_msgs/msg/CompressedImage"
-        else:
-            return "foxglove.CompressedImage"
+    def set_default_schema_name(self, writer_format: WRITER_FORMATS) -> str:
+        """Set schema name to default if None, then return it."""
+        if self.schema_name is None:
+            if writer_format == "ros1":
+                self.schema_name = "foxglove_msgs/CompressedImage"
+            elif writer_format == "ros2":
+                self.schema_name = "sensor_msgs/msg/CompressedImage"
+            else:
+                self.schema_name = "foxglove.CompressedImage"
+        return self.schema_name
 
 
 class CompressedVideoMappingConfig(FileMatchingConfig):
     type: Literal["compressed_video"] = "compressed_video"
+    schema_name: (
+        Literal[
+            "foxglove_msgs/CompressedVideo",
+            "foxglove_msgs/msg/CompressedVideo",
+            "foxglove.CompressedVideo",
+        ]
+        | None
+    ) = Field(
+        description="The name of schema to use for the mapping. If None, defaults are used: 'foxglove_msgs/CompressedVideo' (ros1), 'foxglove_msgs/msg/CompressedVideo' (ros2), 'foxglove.CompressedVideo' (json/protobuf)",
+        default=None,
+    )
     topic_suffix: str = Field(
         description="The suffix to append to the topic name for the mapping (e.g., 'CompressedVideo')"
     )
@@ -73,17 +99,31 @@ class CompressedVideoMappingConfig(FileMatchingConfig):
         default="h264",
     )
 
-    def schema_name(self, writer_format: WRITER_FORMATS) -> str:
-        if writer_format == "ros1":
-            return "foxglove_msgs/CompressedVideo"
-        elif writer_format == "ros2":
-            return "foxglove_msgs/msg/CompressedVideo"
-        else:
-            return "foxglove.CompressedVideo"
+    def set_default_schema_name(self, writer_format: WRITER_FORMATS) -> str:
+        """Set schema name to default if None, then return it."""
+        if self.schema_name is None:
+            if writer_format == "ros1":
+                self.schema_name = "foxglove_msgs/CompressedVideo"
+            elif writer_format == "ros2":
+                self.schema_name = "foxglove_msgs/msg/CompressedVideo"
+            else:
+                self.schema_name = "foxglove.CompressedVideo"
+        return self.schema_name
 
 
 class LogMappingConfig(FileMatchingConfig):
     type: Literal["log"] = "log"
+    schema_name: (
+        Literal[
+            "rosgraph_msgs/Log",
+            "rcl_interfaces/msg/Log",
+            "foxglove.Log",
+        ]
+        | None
+    ) = Field(
+        description="The name of schema to use for the mapping. If None, defaults are used: 'rosgraph_msgs/Log' (ros1), 'rcl_interfaces/msg/Log' (ros2), 'foxglove.Log' (json/protobuf)",
+        default=None,
+    )
     topic_suffix: str | None = Field(
         description="The suffix to append to the topic name for the mapping. If none, the full topic name will be 'rosout'",
         default=None,
@@ -97,13 +137,16 @@ class LogMappingConfig(FileMatchingConfig):
         default="%Y-%m-%d %H:%M:%S",
     )
 
-    def schema_name(self, writer_format: WRITER_FORMATS) -> str:
-        if writer_format == "ros1":
-            return "rosgraph_msgs/Log"
-        elif writer_format == "ros2":
-            return "rcl_interfaces/msg/Log"
-        else:
-            return "foxglove.Log"
+    def set_default_schema_name(self, writer_format: WRITER_FORMATS) -> str:
+        """Set schema name to default if None, then return it."""
+        if self.schema_name is None:
+            if writer_format == "ros1":
+                self.schema_name = "rosgraph_msgs/Log"
+            elif writer_format == "ros2":
+                self.schema_name = "rcl_interfaces/msg/Log"
+            else:
+                self.schema_name = "foxglove.Log"
+        return self.schema_name
 
 
 OtherMappingTypes = Annotated[
@@ -166,7 +209,7 @@ class ConverterFunctionDefinition(BaseModel):
     )
     available_columns: list[str] = Field(
         description="The columns that are available for the mapping. Not yet used. Placeholder for future template validation.",
-        default=list,
+        default_factory=list,
     )
 
 

@@ -173,7 +173,7 @@ class JsonConverter(ConverterBase):
     @property
     def writer(self) -> McapWriter:
         """Get the underlying writer instance."""
-        return self._writer
+        return self._writer  # type: ignore[return-value]
 
     def register_generic_schema(
         self,
@@ -231,7 +231,7 @@ class JsonConverter(ConverterBase):
                 properties[key] = {"type": "string"}
 
         # Register the schema
-        schema_id = self._writer.register_schema(
+        schema_id = self._writer.register_schema(  # type: ignore[union-attr]
             name=schema_name,
             encoding="jsonschema",
             data=json.dumps(schema).encode(),
@@ -254,7 +254,7 @@ class JsonConverter(ConverterBase):
             schema_data = get_foxglove_jsonschema(schema_name.removeprefix("foxglove."))
 
             # Register schema
-            schema_id = self._writer.register_schema(
+            schema_id = self._writer.register_schema(  # type: ignore[union-attr]
                 name=f"foxglove.{schema_name.removeprefix('foxglove.')}",
                 encoding=SchemaEncoding.JSONSchema,
                 data=schema_data,
@@ -284,7 +284,7 @@ class JsonConverter(ConverterBase):
             unit: Unit label for progress tracking
         """
         # Register channel
-        channel_id = self._writer.register_channel(
+        channel_id = self._writer.register_channel(  # type: ignore[union-attr]
             topic=topic_name,
             schema_id=schema_id if schema_id is not None else 0,
             message_encoding=MessageEncoding.JSON,
@@ -302,7 +302,7 @@ class JsonConverter(ConverterBase):
             if "data" in msg and isinstance(msg["data"], bytes):
                 msg["data"] = base64.b64encode(msg["data"]).decode("utf-8")
 
-            self._writer.add_message(
+            self._writer.add_message(  # type: ignore[union-attr]
                 channel_id=channel_id,
                 data=json.dumps(msg).encode("utf-8"),
                 log_time=converted_row.log_time_ns,

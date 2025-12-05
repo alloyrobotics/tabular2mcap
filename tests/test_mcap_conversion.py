@@ -134,7 +134,7 @@ def compare_mcap_files(
         ("alloy", "protobuf"),
         ("lerobot", "json"),
         ("lerobot", "ros2"),
-        # TODO: ("lerobot", "protobuf"), # attachments not supported yet
+        ("lerobot", "protobuf"),
     ],
 )
 def test_mcap_conversion(mcap_name: str, writer_format: str):
@@ -155,7 +155,7 @@ def test_mcap_conversion(mcap_name: str, writer_format: str):
         ("lerobot", "json"),
         ("lerobot", "ros2"),
         ("alloy", "protobuf"),
-        # TODO: ("lerobot", "protobuf"), # attachments not supported yet
+        ("lerobot", "protobuf"),
     ],
 )
 def test_generate_converter_functions(mcap_name: str, writer_format: str):

@@ -89,6 +89,7 @@ def ros2_msg_to_template(msg_def_text: str, msg_type: str) -> dict:
                 return f"{{{{ <{col_name}_column>{filter_str} }}}}"
         else:
             field_type_str = str(field.type)
+            template: dict[str, Any] | str
             if field_type_str in (
                 "builtin_interfaces/Time",
                 "builtin_interfaces/Duration",
@@ -103,7 +104,7 @@ def ros2_msg_to_template(msg_def_text: str, msg_type: str) -> dict:
                     f.name: to_template_value(f, f.name) for f in nested_def.fields
                 }
                 if nested_def.constants:
-                    template["_constants"] = ", ".join(
+                    template["_constants"] = ", ".join(  # type: ignore[union-attr]
                         [f"{c.name}={c.value}" for c in nested_def.constants]
                     )
             else:
@@ -139,7 +140,7 @@ class Ros2Converter(ConverterBase):
     @property
     def writer(self) -> Any:
         """Get the underlying writer instance (accesses _writer attribute for ROS2)."""
-        return self._writer._writer
+        return self._writer._writer  # type: ignore[union-attr]
 
     @staticmethod
     def sanitize_schema_name(schema_name: str) -> str:
@@ -200,7 +201,7 @@ class Ros2Converter(ConverterBase):
         schema_text = get_schema_definition(
             schema_name, "jazzy", custom_msg_txt=custom_msg_txt
         )
-        schema = self._writer.register_msgdef(schema_name, schema_text)
+        schema = self._writer.register_msgdef(schema_name, schema_text)  # type: ignore[union-attr, arg-type]
 
         return schema, schema_keys
 
@@ -214,7 +215,7 @@ class Ros2Converter(ConverterBase):
             Schema object
         """
         schema_text = get_schema_definition(schema_name, "jazzy")
-        schema = self._writer.register_msgdef(schema_name, schema_text)
+        schema = self._writer.register_msgdef(schema_name, schema_text)  # type: ignore[union-attr, arg-type]
         return schema
 
     def get_schema_template(self, schema_name: str) -> str:
@@ -227,7 +228,7 @@ class Ros2Converter(ConverterBase):
             Schema template
         """
         schema_text = get_schema_definition(schema_name, "jazzy")
-        template = ros2_msg_to_template(schema_text, schema_name)
+        template = ros2_msg_to_template(schema_text, schema_name)  # type: ignore[arg-type]
         return jinja2_json_dump(template)
 
     def write_messages_from_iterator(
@@ -256,9 +257,9 @@ class Ros2Converter(ConverterBase):
             unit=unit,
         ):
             msg = converted_row.data
-            self._writer.write_message(
+            self._writer.write_message(  # type: ignore[union-attr]
                 topic=topic_name,
-                schema=schema_id,
+                schema=schema_id,  # type: ignore[arg-type]
                 message=msg,
                 log_time=converted_row.log_time_ns,
                 publish_time=converted_row.publish_time_ns,

@@ -114,7 +114,7 @@ def load_tabular_data(file_path: Path, suffix: str | None = None) -> pd.DataFram
 
 
 def load_video_data(file_path: Path) -> tuple[list[np.ndarray], dict]:
-    cap = cv2.VideoCapture(file_path)
+    cap = cv2.VideoCapture(str(file_path))
     logger.debug(f"Loaded video data from {file_path}")
 
     # Get video properties
