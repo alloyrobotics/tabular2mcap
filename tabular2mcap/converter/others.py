@@ -169,7 +169,8 @@ def compressed_video_message_iterator(
         fps: Frames per second
         format: Video format (e.g., 'h264', 'h265')
         frame_id: Frame ID string
-        use_foxglove_format: Unused, kept for API consistency with compressed_image_message_iterator
+        use_foxglove_format: Unused - CompressedVideo only has Foxglove schema (no ROS2 equivalent).
+            Kept for API consistency with compressed_image_message_iterator.
         writer_format: MCAP writer format ('json', 'ros2', 'protobuf')
     """
     try:

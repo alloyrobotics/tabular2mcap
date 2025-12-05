@@ -423,24 +423,19 @@ class McapConverter:
                     )
 
                     # Create frame iterator based on type
-                    if isinstance(other_mapping, CompressedImageMappingConfig):
-                        frame_iterator = compressed_image_message_iterator(
-                            video_frames=video_frames,
-                            fps=video_properties["fps"],
-                            format=other_mapping.format,
-                            frame_id=other_mapping.frame_id,
-                            use_foxglove_format=schema_name.startswith("foxglove"),
-                            writer_format=self.mcap_config.writer_format,
-                        )
-                    else:  # CompressedVideoMappingConfig
-                        frame_iterator = compressed_video_message_iterator(
-                            video_frames=video_frames,
-                            fps=video_properties["fps"],
-                            format=other_mapping.format,
-                            frame_id=other_mapping.frame_id,
-                            use_foxglove_format=schema_name.startswith("foxglove"),
-                            writer_format=self.mcap_config.writer_format,
-                        )
+                    iterator_func = (
+                        compressed_image_message_iterator
+                        if isinstance(other_mapping, CompressedImageMappingConfig)
+                        else compressed_video_message_iterator
+                    )
+                    frame_iterator = iterator_func(
+                        video_frames=video_frames,
+                        fps=video_properties["fps"],
+                        format=other_mapping.format,
+                        frame_id=other_mapping.frame_id,
+                        use_foxglove_format=schema_name.startswith("foxglove"),
+                        writer_format=self.mcap_config.writer_format,
+                    )
 
                     self._converter.write_messages_from_iterator(
                         iterator=enumerate(frame_iterator),

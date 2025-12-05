@@ -244,8 +244,6 @@ class ProtobufConverter(ConverterBase):
             leave=False,
             unit=unit,
         ):
-            # if _idx < 5:
-            #     logger.info(f"Writing message {_idx}: {converted_row.data}")
             self._writer.write_message(  # type: ignore[union-attr]
                 topic=topic_name,
                 message=proto_class(**converted_row.data),
