@@ -1,6 +1,6 @@
 import logging
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -65,14 +65,21 @@ class McapConverter:
         self,
         config_path: Path | None = None,
         converter_functions_path: Path | None = None,
+        config_model_class: type[McapConversionConfig] | None = None,
     ):
         """
         Initialize the MCAP converter.
 
         Args:
-            config_path: Path to the configuration file or McapConversionConfig object
+            config_path: Path to the configuration file
             converter_functions_path: Path to the converter functions file
+            config_model_class: Optional custom config model class for validation.
+                Used by subpackages (e.g., tabular2mcap-pro) to inject extended config models.
+                If None, uses the default McapConversionConfig.
         """
+        # Store config model class for subclass use
+        self._config_model_class = config_model_class or McapConversionConfig
+
         # Initialize schema IDs
         self._schema_ids = {}
 
@@ -87,8 +94,14 @@ class McapConverter:
         download_and_cache_all_repos(distro="jazzy")
 
     def load_config(self, config_path: Path) -> None:
-        """Load mapping configuration from YAML file"""
-        self.mcap_config = load_mcap_conversion_config(config_path)
+        """Load mapping configuration from YAML file.
+
+        Uses the config_model_class specified at init time for validation.
+        Subclasses can override this method for custom loading behavior.
+        """
+        self.mcap_config = load_mcap_conversion_config(
+            config_path, model_class=self._config_model_class
+        )
 
     def load_converter_functions(self, functions_path: Path) -> None:
         """Load converter function definitions.
@@ -263,6 +276,125 @@ class McapConverter:
             )
         return df.where(pd.notna(df), None)
 
+    def _register_schema(
+        self,
+        df: pd.DataFrame,
+        topic_name: str,
+        converter_function,
+        converter_def,
+    ) -> tuple[int | None, Callable]:
+        """Register schema and return schema_id and convert_row function.
+
+        Handles three cases:
+        1. No schema_name: Generate schema from DataFrame columns
+        2. schema_name exists in cache: Reuse existing schema
+        3. New schema_name: Register the named schema
+
+        Args:
+            df: DataFrame to generate schema from (for case 1)
+            topic_name: Topic name for schema naming
+            converter_function: Converter function config with schema_name
+            converter_def: Converter function definition with convert_row
+
+        Returns:
+            Tuple of (schema_id, convert_row_function)
+        """
+        if converter_function.schema_name is None:
+            # Generate schema from DataFrame
+            if self.mcap_config.writer_format == "ros2":
+                schema_name = Ros2Converter.sanitize_schema_name(topic_name)
+            else:
+                schema_name = f"table.{topic_name.replace('/', '.')}"
+
+            schema_id, schema_keys = self._converter.register_generic_schema(
+                df=df,
+                schema_name=schema_name,
+                exclude_keys=converter_function.exclude_columns or [],
+            )
+            convert_row = generate_generic_converter_func(
+                schema_keys=schema_keys,
+                converter_func=converter_def.convert_row,
+            )
+            self._schema_ids[schema_name] = schema_id
+        elif converter_function.schema_name in self._schema_ids:
+            # Reuse existing schema
+            schema_id = self._schema_ids[converter_function.schema_name]
+            convert_row = converter_def.convert_row
+        else:
+            # Register new named schema
+            convert_row = converter_def.convert_row
+            schema_id = self._converter.register_schema(
+                schema_name=converter_function.schema_name,
+            )
+            self._schema_ids[converter_function.schema_name] = schema_id
+
+        return schema_id, convert_row
+
+    def _write_messages(
+        self,
+        df: pd.DataFrame,
+        topic_name: str,
+        schema_id: int,
+        convert_row: Callable,
+    ) -> None:
+        """Write DataFrame rows as MCAP messages.
+
+        Args:
+            df: DataFrame containing the data rows
+            topic_name: Topic name for the messages
+            schema_id: Registered schema ID
+            convert_row: Function to convert each row to ConvertedRow
+        """
+
+        def convert_row_iterator() -> Iterable[tuple[int, ConvertedRow]]:
+            for idx, row in df.iterrows():
+                yield idx, convert_row(row)
+
+        self._converter.write_messages_from_iterator(
+            iterator=convert_row_iterator(),
+            topic_name=topic_name,
+            schema_id=schema_id,
+            data_length=len(df),
+            unit="msg",
+        )
+
+    def _process_converter_function(
+        self,
+        df: pd.DataFrame,
+        topic_name: str,
+        converter_function,
+    ) -> None:
+        """Process a single converter function for a DataFrame.
+
+        Args:
+            df: DataFrame to convert
+            topic_name: Full topic name (prefix + path + suffix)
+            converter_function: Converter function configuration
+        """
+        logger.debug(
+            f"Processing converter function: {converter_function.function_name}"
+        )
+
+        if converter_function.function_name not in self.converter_functions:
+            raise ValueError(
+                f"Unknown converter function: {converter_function.function_name}. "
+                f"Available functions: {list(self.converter_functions.keys())}"
+            )
+
+        converter_def = self.converter_functions[converter_function.function_name]
+
+        # Validate conversion with first row
+        converter_def.convert_row(df.iloc[0])
+
+        # Register schema
+        schema_id, convert_row = self._register_schema(
+            df, topic_name, converter_function, converter_def
+        )
+
+        # Write messages
+        if schema_id is not None:
+            self._write_messages(df, topic_name, schema_id, convert_row)
+
     def _process_tabular_mappings(
         self,
         mapping_tuples: list,
@@ -294,81 +426,19 @@ class McapConverter:
                 else:
                     logger.debug(f"Converting {relative_path} with {len(df)} rows")
 
+                # Get relative path, optionally without file extension
+                path_str = (
+                    str(relative_path.with_suffix(""))
+                    if strip_file_suffix
+                    else str(relative_path)
+                )
+                relative_path_no_ext = self._clean_string(path_str)
+                topic_base = f"{topic_prefix}{relative_path_no_ext}/"
+
                 for converter_function in file_mapping.converter_functions:
-                    logger.debug(
-                        f"Processing converter function: {converter_function.function_name}"
-                    )
+                    topic_name = f"{topic_base}{converter_function.topic_suffix}"
+                    self._process_converter_function(df, topic_name, converter_function)
 
-                    # Get converter function definition
-                    if converter_function.function_name in self.converter_functions:
-                        converter_def = self.converter_functions[
-                            converter_function.function_name
-                        ]
-
-                        # Get relative path, optionally without file extension
-                        path_str = (
-                            str(relative_path.with_suffix(""))
-                            if strip_file_suffix
-                            else str(relative_path)
-                        )
-                        relative_path_no_ext = self._clean_string(path_str)
-                        topic_name = f"{topic_prefix}{relative_path_no_ext}/{converter_function.topic_suffix}"
-
-                        # try to convert first row to check if the converter function is valid
-                        # if not, this will raise an exception. if yes, we can proceed with the conversion.
-                        converter_def.convert_row(df.iloc[0])
-
-                        # register schema
-                        if converter_function.schema_name is None:
-                            if self.mcap_config.writer_format == "ros2":
-                                schema_name = Ros2Converter.sanitize_schema_name(
-                                    topic_name
-                                )
-                            else:
-                                schema_name = f"table.{topic_name.replace('/', '.')}"
-                            schema_id, schema_keys = (
-                                self._converter.register_generic_schema(
-                                    df=df,
-                                    schema_name=schema_name,
-                                    exclude_keys=converter_function.exclude_columns
-                                    or [],
-                                )
-                            )
-                            convert_row = generate_generic_converter_func(
-                                schema_keys=schema_keys,
-                                converter_func=converter_def.convert_row,
-                            )
-                            self._schema_ids[schema_name] = schema_id
-                        elif converter_function.schema_name in self._schema_ids:
-                            schema_id = self._schema_ids[converter_function.schema_name]
-                            convert_row = converter_def.convert_row
-                        else:
-                            convert_row = converter_def.convert_row
-                            schema_id = self._converter.register_schema(
-                                schema_name=converter_function.schema_name,
-                            )
-                            self._schema_ids[converter_function.schema_name] = schema_id
-
-                        # write messages
-                        if schema_id is not None:
-
-                            def convert_row_iterator() -> Iterable[
-                                tuple[int, ConvertedRow]
-                            ]:
-                                for idx, row in df.iterrows():  # noqa: B023
-                                    yield idx, convert_row(row)  # noqa: B023
-
-                            self._converter.write_messages_from_iterator(
-                                iterator=convert_row_iterator(),
-                                topic_name=topic_name,
-                                schema_id=schema_id,
-                                data_length=len(df),
-                                unit="msg",
-                            )
-                    else:
-                        raise ValueError(
-                            f"Unknown converter function: {converter_function.function_name}. Available functions: {list(self.converter_functions.keys())}"
-                        )
             except Exception as e:
                 if best_effort:
                     logger.exception(

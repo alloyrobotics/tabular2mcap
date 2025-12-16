@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import TypeVar
 
 import cv2
 import numpy as np
@@ -17,6 +18,9 @@ from tabular2mcap.loader.models import (
     OtherMappingTypes,
     TabularMappingConfig,
 )
+
+# TypeVar for config model injection
+ConfigT = TypeVar("ConfigT", bound=McapConversionConfig)
 
 logger = logging.getLogger(__name__)
 
@@ -140,11 +144,25 @@ def load_video_data(file_path: Path) -> tuple[list[np.ndarray], dict]:
     return frames, video_props
 
 
-def load_mcap_conversion_config(config_path: Path) -> McapConversionConfig:
-    """Load and validate mapping configuration from YAML file"""
+def load_mcap_conversion_config(
+    config_path: Path,
+    model_class: type[ConfigT] | None = None,
+) -> ConfigT:
+    """Load and validate mapping configuration from YAML file.
+
+    Args:
+        config_path: Path to the YAML configuration file
+        model_class: Pydantic model class to validate against. Defaults to McapConversionConfig.
+            Can be overridden to use extended config models (e.g., in tabular2mcap-pro).
+
+    Returns:
+        Validated configuration object of the specified model_class type
+    """
+    if model_class is None:
+        model_class = McapConversionConfig  # type: ignore[assignment]
     with open(config_path) as f:
         config = yaml.safe_load(f)
-    return McapConversionConfig.model_validate(config)
+    return model_class.model_validate(config)
 
 
 def load_converter_function_definitions(path: Path) -> ConverterFunctionFile:
