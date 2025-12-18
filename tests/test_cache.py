@@ -139,16 +139,14 @@ class TestEnvVarParsing:
     """Tests for environment variable parsing with safeguards."""
 
     def test_negative_max_retries_clamped(self, tmp_path: Path):
-        """Test that negative max_retries is clamped to 0."""
+        """Test that negative max_retries is clamped to 0 (one attempt, no retries)."""
         dest = tmp_path / "test.zip"
 
         with patch("tabular2mcap.schemas.cache.urllib.request.urlretrieve") as mock:
             mock.side_effect = urllib.error.HTTPError(
                 "http://example.com", 503, "Service Unavailable", {}, None
             )
-            # Explicitly pass negative value (simulating bad env var)
             result = download_file("http://example.com/file.zip", dest, max_retries=-1)
 
-        # With max_retries=-1, range(0) means no attempts... but we clamp in env parsing
-        # This test verifies the function handles edge case gracefully
         assert result is False
+        mock.assert_called_once()  # Clamped to 0: one attempt, no retries

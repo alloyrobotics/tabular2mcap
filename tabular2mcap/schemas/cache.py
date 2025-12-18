@@ -126,6 +126,7 @@ def download_file(
     Returns:
         True if download successful, False otherwise
     """
+    max_retries = max(0, max_retries)
     backoff = initial_backoff
 
     for attempt in range(max_retries + 1):
@@ -149,7 +150,24 @@ def download_file(
                 time.sleep(backoff)
                 backoff = min(backoff * backoff_multiplier, max_backoff)
             else:
-                logger.error(f"Failed to download {url}: HTTP {e.code} - {e.reason}")
+                # Build detailed error message for HTTP failures
+                error_details = [
+                    "HTTP Error downloading file",
+                    f"  URL: {url}",
+                    f"  Destination: {destination}",
+                    f"  Status Code: {e.code}",
+                    f"  Reason: {e.reason}",
+                    f"  Attempt: {attempt + 1}/{max_retries + 1}",
+                ]
+                if e.headers:
+                    error_details.append(f"  Response Headers: {dict(e.headers)}")
+                try:
+                    body = e.read().decode("utf-8", errors="replace")[:500]
+                    if body:
+                        error_details.append(f"  Response Body (truncated): {body}")
+                except Exception:
+                    pass
+                logger.error("\n".join(error_details))
                 return False
 
         except urllib.error.URLError as e:
@@ -162,14 +180,35 @@ def download_file(
                 time.sleep(backoff)
                 backoff = min(backoff * backoff_multiplier, max_backoff)
             else:
-                logger.error(
-                    f"Failed to download {url} after {max_retries} retries: {e.reason}"
-                )
+                # Build detailed error message for network failures
+                error_details = [
+                    "Network Error downloading file",
+                    f"  URL: {url}",
+                    f"  Destination: {destination}",
+                    f"  Error Type: {type(e.reason).__name__}",
+                    f"  Error: {e.reason}",
+                    f"  Attempt: {attempt + 1}/{max_retries + 1}",
+                    f"  Total Retries Exhausted: {max_retries}",
+                ]
+                # Include underlying cause if available
+                if hasattr(e.reason, "errno"):
+                    error_details.append(f"  Errno: {e.reason.errno}")
+                if hasattr(e.reason, "strerror"):
+                    error_details.append(f"  System Error: {e.reason.strerror}")
+                logger.error("\n".join(error_details))
                 return False
 
         except Exception as e:
-            # Don't retry on unexpected errors
-            logger.error(f"Unexpected error downloading {url}: {e}")
+            # Don't retry on unexpected errors - log detailed info
+            error_details = [
+                "Unexpected error downloading file",
+                f"  URL: {url}",
+                f"  Destination: {destination}",
+                f"  Exception Type: {type(e).__name__}",
+                f"  Exception: {e}",
+                f"  Attempt: {attempt + 1}/{max_retries + 1}",
+            ]
+            logger.error("\n".join(error_details))
             return False
 
     return False
