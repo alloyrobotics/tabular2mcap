@@ -1156,14 +1156,15 @@
 
 
 <h3 id="tabular2mcap.schemas.cache.download_file" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">download_file</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">download_file</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="n">DEFAULT_MAX_RETRIES</span><span class="p">,</span> <span class="n">initial_backoff</span><span class="o">=</span><span class="n">DEFAULT_INITIAL_BACKOFF</span><span class="p">,</span> <span class="n">backoff_multiplier</span><span class="o">=</span><span class="n">DEFAULT_BACKOFF_MULTIPLIER</span><span class="p">,</span> <span class="n">max_backoff</span><span class="o">=</span><span class="n">DEFAULT_MAX_BACKOFF</span><span class="p">)</span></code>
 
 </h3>
 
 
     <div class="doc doc-contents ">
 
-        <p>Download a file from URL to destination path.</p>
+        <p>Download a file from URL to destination path with retry logic.</p>
+<p>Uses exponential backoff for transient failures (network errors, HTTP 5xx).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1207,6 +1208,70 @@
             </td>
             <td>
                 <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_retries</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum number of retry attempts (default: 3)</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="tabular2mcap.schemas.cache.DEFAULT_MAX_RETRIES">DEFAULT_MAX_RETRIES</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>initial_backoff</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Initial backoff delay in seconds (default: 1.0)</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="tabular2mcap.schemas.cache.DEFAULT_INITIAL_BACKOFF">DEFAULT_INITIAL_BACKOFF</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>backoff_multiplier</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Multiplier for backoff after each retry (default: 2.0)</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="tabular2mcap.schemas.cache.DEFAULT_BACKOFF_MULTIPLIER">DEFAULT_BACKOFF_MULTIPLIER</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_backoff</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum backoff delay in seconds (default: 30.0)</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="tabular2mcap.schemas.cache.DEFAULT_MAX_BACKOFF">DEFAULT_MAX_BACKOFF</span></code>
             </td>
           </tr>
       </tbody>
