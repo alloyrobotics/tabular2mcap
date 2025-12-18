@@ -91,6 +91,20 @@ class McapConverter:
         if converter_functions_path is not None:
             self.load_converter_functions(converter_functions_path)
             logger.info(f"Converter functions: {converter_functions_path}")
+        McapConverter.download_cache_schemas()
+
+    @staticmethod
+    def download_cache_schemas() -> None:
+        """Download and cache ROS 2 message definitions.
+
+        Static method so users can pre-download schemas before parallelized
+        conversion, avoiding cache download delays in worker processes.
+
+        Example:
+            McapConverter.download_cache_schemas()  # Pre-warm cache
+            with ProcessPoolExecutor() as pool:
+                pool.map(convert_file, files)
+        """
         download_and_cache_all_repos(distro="jazzy")
 
     def load_config(self, config_path: Path) -> None:
