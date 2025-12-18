@@ -11,7 +11,9 @@ The downloaded files are cached in the user's cache directory to avoid re-downlo
 """
 
 import logging
+import os
 import tempfile
+import time
 import urllib.error
 import urllib.request
 import zipfile
@@ -20,6 +22,59 @@ from pathlib import Path
 import platformdirs
 
 logger = logging.getLogger(__name__)
+
+
+def _get_env_int(name: str, default: int, min_value: int = 0) -> int:
+    """Get integer from environment variable, or return default."""
+    value = os.environ.get(name)
+    if value is not None:
+        try:
+            parsed = int(value)
+            if parsed < min_value:
+                logger.warning(
+                    f"Value for {name} ({parsed}) below minimum ({min_value}), "
+                    f"using {min_value}"
+                )
+                return min_value
+            return parsed
+        except ValueError:
+            logger.warning(
+                f"Invalid value for {name}: {value!r}, using default {default}"
+            )
+    return default
+
+
+def _get_env_float(name: str, default: float, min_value: float = 0.0) -> float:
+    """Get float from environment variable, or return default."""
+    value = os.environ.get(name)
+    if value is not None:
+        try:
+            parsed = float(value)
+            if parsed < min_value:
+                logger.warning(
+                    f"Value for {name} ({parsed}) below minimum ({min_value}), "
+                    f"using {min_value}"
+                )
+                return min_value
+            return parsed
+        except ValueError:
+            logger.warning(
+                f"Invalid value for {name}: {value!r}, using default {default}"
+            )
+    return default
+
+
+# Retry configuration (can be overridden via environment variables)
+DEFAULT_MAX_RETRIES = _get_env_int("TABULAR2MCAP_MAX_RETRIES", 3, min_value=0)
+DEFAULT_INITIAL_BACKOFF = _get_env_float(
+    "TABULAR2MCAP_INITIAL_BACKOFF", 1.0, min_value=0.0
+)  # seconds
+DEFAULT_BACKOFF_MULTIPLIER = _get_env_float(
+    "TABULAR2MCAP_BACKOFF_MULTIPLIER", 2.0, min_value=1.0
+)
+DEFAULT_MAX_BACKOFF = _get_env_float(
+    "TABULAR2MCAP_MAX_BACKOFF", 30.0, min_value=1.0
+)  # seconds
 
 # Cache directory for storing downloaded definitions
 CACHE_DIR = platformdirs.user_cache_path(
@@ -47,25 +102,77 @@ REPOSITORIES = [
 ]
 
 
-def download_file(url: str, destination: Path) -> bool:
+def download_file(
+    url: str,
+    destination: Path,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    initial_backoff: float = DEFAULT_INITIAL_BACKOFF,
+    backoff_multiplier: float = DEFAULT_BACKOFF_MULTIPLIER,
+    max_backoff: float = DEFAULT_MAX_BACKOFF,
+) -> bool:
     """
-    Download a file from URL to destination path.
+    Download a file from URL to destination path with retry logic.
+
+    Uses exponential backoff for transient failures (network errors, HTTP 5xx).
 
     Args:
         url: URL to download from
         destination: Local path to save the file
+        max_retries: Maximum number of retry attempts (default: 3)
+        initial_backoff: Initial backoff delay in seconds (default: 1.0)
+        backoff_multiplier: Multiplier for backoff after each retry (default: 2.0)
+        max_backoff: Maximum backoff delay in seconds (default: 30.0)
 
     Returns:
         True if download successful, False otherwise
     """
-    try:
-        logger.info(f"Downloading {url} to {destination}")
-        urllib.request.urlretrieve(url, destination)
-        logger.info(f"Successfully downloaded {destination.name}")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to download {url}: {e}")
-        return False
+    backoff = initial_backoff
+
+    for attempt in range(max_retries + 1):
+        try:
+            if attempt == 0:
+                logger.info(f"Downloading {url} to {destination}")
+            else:
+                logger.info(f"Retry attempt {attempt}/{max_retries} for {url}")
+
+            urllib.request.urlretrieve(url, destination)
+            logger.info(f"Successfully downloaded {destination.name}")
+            return True
+
+        except urllib.error.HTTPError as e:
+            # Retry on server errors (5xx), but not on client errors (4xx)
+            if 500 <= e.code < 600 and attempt < max_retries:
+                logger.warning(
+                    f"Server error {e.code} downloading {url}, "
+                    f"retrying in {backoff:.1f}s..."
+                )
+                time.sleep(backoff)
+                backoff = min(backoff * backoff_multiplier, max_backoff)
+            else:
+                logger.error(f"Failed to download {url}: HTTP {e.code} - {e.reason}")
+                return False
+
+        except urllib.error.URLError as e:
+            # Retry on network errors (connection refused, timeout, DNS, etc.)
+            if attempt < max_retries:
+                logger.warning(
+                    f"Network error downloading {url}: {e.reason}, "
+                    f"retrying in {backoff:.1f}s..."
+                )
+                time.sleep(backoff)
+                backoff = min(backoff * backoff_multiplier, max_backoff)
+            else:
+                logger.error(
+                    f"Failed to download {url} after {max_retries} retries: {e.reason}"
+                )
+                return False
+
+        except Exception as e:
+            # Don't retry on unexpected errors
+            logger.error(f"Unexpected error downloading {url}: {e}")
+            return False
+
+    return False
 
 
 def extract_zip(zip_path: Path, extract_to: Path) -> bool:
